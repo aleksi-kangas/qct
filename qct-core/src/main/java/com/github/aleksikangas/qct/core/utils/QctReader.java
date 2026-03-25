@@ -38,6 +38,7 @@ public final class QctReader {
     final ByteBuffer byteBuffer = ByteBuffer.allocate(count);
     try {
       if (fileChannel.read(byteBuffer, byteOffset) == count) {
+        byteBuffer.flip();
         final int[] bytes = new int[count];
         for (int i = 0; i < count; ++i) {
           bytes[i] = byteBuffer.get(i) & 0xFF;
@@ -63,6 +64,7 @@ public final class QctReader {
     final ByteBuffer byteBuffer = ByteBuffer.allocate(count);
     try {
       final int readCount = fileChannel.read(byteBuffer, byteOffset);
+      byteBuffer.flip();
       final int[] bytes = new int[readCount];
       for (int i = 0; i < readCount; ++i) {
         bytes[i] = byteBuffer.get(i) & 0xFF;
