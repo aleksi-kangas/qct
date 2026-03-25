@@ -75,6 +75,8 @@ public record Metadata(MagicNumber magicNumber,
                        Instant originalFileCreationTime,
                        ExtendedData extendedData,
                        MapOutline mapOutline) {
+  public static final long BYTE_OFFSET = 0x0000L;
+
   public Metadata {
     Objects.requireNonNull(magicNumber);
     Objects.requireNonNull(fileFormatVersion);
