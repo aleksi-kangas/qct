@@ -7,7 +7,7 @@ package com.github.aleksikangas.qct.core.meta.decode;
 import com.github.aleksikangas.qct.core.meta.DatumShift;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 
-import java.nio.channels.AsynchronousFileChannel;
+import java.nio.channels.FileChannel;
 
 /**
  * A decoder of {@link DatumShift}.
@@ -15,9 +15,9 @@ import java.nio.channels.AsynchronousFileChannel;
  * @see DatumShift
  */
 public final class DatumShiftDecoder {
-  public static DatumShift decode(final AsynchronousFileChannel asyncFileChannel, final long byteOffset) {
-    return new DatumShift(QctReader.readDouble(asyncFileChannel, byteOffset),
-                          QctReader.readDouble(asyncFileChannel, byteOffset + 0x08L));
+  public static DatumShift decode(final FileChannel fileChannel, final long byteOffset) {
+    return new DatumShift(QctReader.readDouble(fileChannel, byteOffset),
+                          QctReader.readDouble(fileChannel, byteOffset + 0x08L));
   }
 
   private DatumShiftDecoder() {

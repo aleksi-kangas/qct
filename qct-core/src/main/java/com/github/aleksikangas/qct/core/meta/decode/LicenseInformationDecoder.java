@@ -7,7 +7,7 @@ package com.github.aleksikangas.qct.core.meta.decode;
 import com.github.aleksikangas.qct.core.meta.LicenseInformation;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 
-import java.nio.channels.AsynchronousFileChannel;
+import java.nio.channels.FileChannel;
 
 /**
  * A decoder of {@link LicenseInformation}.
@@ -15,12 +15,11 @@ import java.nio.channels.AsynchronousFileChannel;
  * @see LicenseInformation
  */
 public final class LicenseInformationDecoder {
-  public static LicenseInformation decode(final AsynchronousFileChannel asyncFileChannel, final long byteOffset) {
-    return new LicenseInformation(QctReader.readInt(asyncFileChannel, byteOffset),
-                                  QctReader.readString(asyncFileChannel, byteOffset + 0x0CL),
-                                  SerialNumberDecoder.decode(asyncFileChannel,
-                                                             QctReader.readPointer(asyncFileChannel,
-                                                                                   byteOffset + 0x10L)));
+  public static LicenseInformation decode(final FileChannel fileChannel, final long byteOffset) {
+    return new LicenseInformation(QctReader.readInt(fileChannel, byteOffset),
+                                  QctReader.readString(fileChannel, byteOffset + 0x0CL),
+                                  SerialNumberDecoder.decode(fileChannel,
+                                                             QctReader.readPointer(fileChannel, byteOffset + 0x10L)));
   }
 
   private LicenseInformationDecoder() {
