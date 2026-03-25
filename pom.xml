@@ -6,12 +6,50 @@
 
     <groupId>com.github.aleksikangas</groupId>
     <artifactId>qct</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.0.1</version>
+    <packaging>pom</packaging>
+
+    <developers>
+        <developer>
+            <id>aleksi-kangas</id>
+            <name>Aleksi Kangas</name>
+            <email>aleksi.kangas@hotmail.com</email>
+        </developer>
+    </developers>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/license/mit</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:https://github.com/aleksi-kangas/qct.git</connection>
+        <developerConnection>scm:git:git@github.com:aleksi-kangas/qct.git</developerConnection>
+        <url>https://github.com/aleksi-kangas/qct</url>
+    </scm>
+
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/aleksi-kangas/qct/issues</url>
+    </issueManagement>
+
+    <ciManagement>
+        <system>GitHub Actions</system>
+        <url>https://github.com/aleksi-kangas/qct/actions</url>
+    </ciManagement>
+
 
     <properties>
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <modules>
+        <module>qct-core</module>
+    </modules>
 
 </project>
