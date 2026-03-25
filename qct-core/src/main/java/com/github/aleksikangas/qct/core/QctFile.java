@@ -4,6 +4,10 @@
 
 package com.github.aleksikangas.qct.core;
 
+import com.github.aleksikangas.qct.core.meta.Metadata;
+
+import java.util.Objects;
+
 /**
  * <pre>
  * +--------+---------------+---------------------------------------------------+
@@ -18,5 +22,8 @@ package com.github.aleksikangas.qct.core;
  * +--------+--------------+----------------------------------------------------+
  * </pre>
  */
-public record QctFile() {
+public record QctFile(Metadata metadata) {
+  public QctFile {
+    Objects.requireNonNull(metadata);
+  }
 }
