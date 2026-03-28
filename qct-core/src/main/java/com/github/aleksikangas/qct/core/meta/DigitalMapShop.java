@@ -26,9 +26,9 @@ public record DigitalMapShop(int size,
   }
 
   public static final class Decoder {
-    public static DigitalMapShop decode(final FileChannel fileChannel, final long byteOffset) {
+    public static DigitalMapShop decode(final FileChannel fileChannel, final int byteOffset) {
       return new DigitalMapShop(QctReader.readInt(fileChannel, byteOffset),
-                                QctReader.readStringFromPointer(fileChannel, byteOffset + 0x04L));
+                                QctReader.readStringFromPointer(fileChannel, Math.toIntExact(byteOffset + 0x04L)));
     }
 
     private Decoder() {
@@ -38,7 +38,7 @@ public record DigitalMapShop(int size,
   public static final class Encoder {
     public static void encode(final DigitalMapShop digitalMapShop,
                               final FileChannel fileChannel,
-                              final long byteOffset) {
+                              final int byteOffset) {
       Objects.requireNonNull(digitalMapShop);
       throw new UnsupportedOperationException("Not implemented");
     }

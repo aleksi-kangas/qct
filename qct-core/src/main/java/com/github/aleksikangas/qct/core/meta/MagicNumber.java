@@ -45,7 +45,7 @@ public enum MagicNumber {
   }
 
   public static final class Decoder {
-    public static MagicNumber decode(final FileChannel fileChannel, final long byteOffset) {
+    public static MagicNumber decode(final FileChannel fileChannel, final int byteOffset) {
       final int value = QctReader.readInt(fileChannel, byteOffset);
       return Arrays.stream(MagicNumber.values())
                    .filter(f -> f.value == value)
@@ -58,7 +58,7 @@ public enum MagicNumber {
   }
 
   public static final class Encoder {
-    public static void encode(final MagicNumber magicNumber, final FileChannel fileChannel, final long byteOffset) {
+    public static void encode(final MagicNumber magicNumber, final FileChannel fileChannel, final int byteOffset) {
       Objects.requireNonNull(magicNumber);
       QctWriter.writeInt(fileChannel, byteOffset, magicNumber.value);
     }

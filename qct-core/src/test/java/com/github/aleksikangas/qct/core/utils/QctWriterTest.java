@@ -31,7 +31,7 @@ final class QctWriterTest {
     final int value = 42;
     when(mockFileChannel.write(any(ByteBuffer.class), eq(0L))).thenReturn(1);
 
-    QctWriter.writeByte(mockFileChannel, 0L, value);
+    QctWriter.writeByte(mockFileChannel, 0, value);
 
     verify(mockFileChannel, times(1)).write(any(ByteBuffer.class), eq(0L));
     verifyNoMoreInteractions(mockFileChannel);
@@ -42,7 +42,7 @@ final class QctWriterTest {
     final int[] values = { 4, 8, 15, 16, 23, 42 };
     when(mockFileChannel.write(any(ByteBuffer.class), eq(0L))).thenReturn(values.length);
 
-    QctWriter.writeBytes(mockFileChannel, 0L, values);
+    QctWriter.writeBytes(mockFileChannel, 0, values);
 
     verify(mockFileChannel, times(1)).write(any(ByteBuffer.class), eq(0L));
     verifyNoMoreInteractions(mockFileChannel);
@@ -54,7 +54,7 @@ final class QctWriterTest {
     when(mockFileChannel.write(any(ByteBuffer.class), eq(10L))).thenReturn(2);
 
     QctRuntimeException exception = assertThrows(QctRuntimeException.class,
-                                                 () -> QctWriter.writeBytes(mockFileChannel, 10L, values));
+                                                 () -> QctWriter.writeBytes(mockFileChannel, 10, values));
 
     assertTrue(exception.getMessage().contains("Failed to write 3 bytes"));
     verify(mockFileChannel, times(1)).write(any(ByteBuffer.class), eq(10L));
@@ -65,7 +65,7 @@ final class QctWriterTest {
     final double value = 3.141592653589793;
     when(mockFileChannel.write(any(ByteBuffer.class), eq(0L))).thenReturn(8);
 
-    QctWriter.writeDouble(mockFileChannel, 0L, value);
+    QctWriter.writeDouble(mockFileChannel, 0, value);
 
     verify(mockFileChannel).write(argThat(byteBuffer -> byteBuffer.order() == ByteOrder.LITTLE_ENDIAN &&
                                                         Math.abs(byteBuffer.getDouble(0) - value) < 1e-10), eq(0L));
@@ -78,7 +78,7 @@ final class QctWriterTest {
     final double[] values = { 3.141592653589793, 2.71828, -1.0, 42.0 };
     when(mockFileChannel.write(any(ByteBuffer.class), anyLong())).thenReturn(8);
 
-    QctWriter.writeDoubles(mockFileChannel, 100L, values);
+    QctWriter.writeDoubles(mockFileChannel, 100, values);
 
     verify(mockFileChannel, times(values.length)).write(any(ByteBuffer.class), anyLong());
     verifyNoMoreInteractions(mockFileChannel);
@@ -89,7 +89,7 @@ final class QctWriterTest {
     final int value = 0x12345678;
     when(mockFileChannel.write(any(ByteBuffer.class), eq(0L))).thenReturn(4);
 
-    QctWriter.writeInt(mockFileChannel, 0L, value);
+    QctWriter.writeInt(mockFileChannel, 0, value);
 
     verify(mockFileChannel).write(argThat(byteBuffer -> byteBuffer.order() == ByteOrder.LITTLE_ENDIAN &&
                                                         byteBuffer.getInt(0) == value), eq(0L));
@@ -102,7 +102,7 @@ final class QctWriterTest {
     final int pointer = 0xABCDEF00;
     when(mockFileChannel.write(any(ByteBuffer.class), eq(64L))).thenReturn(4);
 
-    QctWriter.writePointer(mockFileChannel, 64L, pointer);
+    QctWriter.writePointer(mockFileChannel, 64, pointer);
 
     verify(mockFileChannel, times(1)).write(any(ByteBuffer.class), eq(64L));
     verifyNoMoreInteractions(mockFileChannel);
@@ -113,7 +113,7 @@ final class QctWriterTest {
     final String value = "Hello, QCT!";
     when(mockFileChannel.write(any(ByteBuffer.class), eq(0L))).thenReturn(value.length() + 1);
 
-    QctWriter.writeString(mockFileChannel, 0L, value);
+    QctWriter.writeString(mockFileChannel, 0, value);
 
     verify(mockFileChannel).write(argThat(byteBuffer -> {
       final ByteBuffer duplicate = byteBuffer.duplicate();
@@ -135,7 +135,7 @@ final class QctWriterTest {
   void writeString_empty() throws IOException {
     when(mockFileChannel.write(any(ByteBuffer.class), eq(50L))).thenReturn(1);
 
-    QctWriter.writeString(mockFileChannel, 50L, "");
+    QctWriter.writeString(mockFileChannel, 50, "");
 
     verify(mockFileChannel, times(1)).write(any(ByteBuffer.class), eq(50L));
   }
@@ -144,7 +144,7 @@ final class QctWriterTest {
   void writeString_null_treatedAsEmpty() throws IOException {
     when(mockFileChannel.write(any(ByteBuffer.class), eq(100L))).thenReturn(1);
 
-    QctWriter.writeString(mockFileChannel, 100L, null);
+    QctWriter.writeString(mockFileChannel, 100, null);
 
     verify(mockFileChannel, times(1)).write(any(ByteBuffer.class), eq(100L));
   }
@@ -154,7 +154,7 @@ final class QctWriterTest {
     String badString = "Hello 😊";
 
     QctRuntimeException exception = assertThrows(QctRuntimeException.class,
-                                                 () -> QctWriter.writeString(mockFileChannel, 0L, badString));
+                                                 () -> QctWriter.writeString(mockFileChannel, 0, badString));
 
     assertTrue(exception.getMessage().contains("cannot be written as single byte"));
   }
@@ -162,10 +162,10 @@ final class QctWriterTest {
   @Test
   void writeString_partialWrite_throwsException() throws IOException {
     final String value = "Test";
-    when(mockFileChannel.write(any(ByteBuffer.class), eq(0L))).thenReturn(3);
+    when(mockFileChannel.write(any(ByteBuffer.class), eq(0))).thenReturn(3);
 
     QctRuntimeException ex = assertThrows(QctRuntimeException.class,
-                                          () -> QctWriter.writeString(mockFileChannel, 0L, value));
+                                          () -> QctWriter.writeString(mockFileChannel, 0, value));
 
     assertTrue(ex.getMessage().contains("Failed to write"));
   }
@@ -173,14 +173,14 @@ final class QctWriterTest {
   @Test
   void writeStringWithPointer() throws IOException {
     final String value = "Pointer String Test";
-    final long pointerOffset = 0L;
-    final long stringOffset = 100L;
+    final int pointerOffset = 0;
+    final int stringOffset = 100;
     when(mockFileChannel.write(any(ByteBuffer.class), anyLong())).thenReturn(value.length() + 1).thenReturn(4);
 
     QctWriter.writeStringWithPointer(mockFileChannel, pointerOffset, stringOffset, value);
 
-    verify(mockFileChannel, times(1)).write(any(ByteBuffer.class), eq(stringOffset));
-    verify(mockFileChannel, times(1)).write(any(ByteBuffer.class), eq(pointerOffset));
+    verify(mockFileChannel, times(1)).write(any(ByteBuffer.class), eq((long) stringOffset));
+    verify(mockFileChannel, times(1)).write(any(ByteBuffer.class), eq((long) pointerOffset));
 
     verifyNoMoreInteractions(mockFileChannel);
   }
@@ -189,7 +189,7 @@ final class QctWriterTest {
   void writeFailsWithIOException_wrappedInQctRuntimeException() throws IOException {
     when(mockFileChannel.write(any(ByteBuffer.class), anyLong())).thenThrow(new IOException("Disk full"));
 
-    QctRuntimeException ex = assertThrows(QctRuntimeException.class, () -> QctWriter.writeInt(mockFileChannel, 0L, 42));
+    QctRuntimeException ex = assertThrows(QctRuntimeException.class, () -> QctWriter.writeInt(mockFileChannel, 0, 42));
 
     assertInstanceOf(IOException.class, ex.getCause());
     assertEquals("Disk full", ex.getCause().getMessage());

@@ -23,9 +23,9 @@ import java.util.Objects;
 public record DatumShift(double north,
                          double east) {
   public static final class Decoder {
-    public static DatumShift decode(final FileChannel fileChannel, final long byteOffset) {
+    public static DatumShift decode(final FileChannel fileChannel, final int byteOffset) {
       return new DatumShift(QctReader.readDouble(fileChannel, byteOffset),
-                            QctReader.readDouble(fileChannel, byteOffset + 0x08L));
+                            QctReader.readDouble(fileChannel, Math.toIntExact(byteOffset + 0x08L)));
     }
 
     private Decoder() {
@@ -33,10 +33,10 @@ public record DatumShift(double north,
   }
 
   public static final class Encoder {
-    public static void encode(final DatumShift datumShift, final FileChannel fileChannel, final long byteOffset) {
+    public static void encode(final DatumShift datumShift, final FileChannel fileChannel, final int byteOffset) {
       Objects.requireNonNull(datumShift);
       QctWriter.writeDouble(fileChannel, byteOffset, datumShift.north());
-      QctWriter.writeDouble(fileChannel, byteOffset + 0x08L, datumShift.east());
+      QctWriter.writeDouble(fileChannel, Math.toIntExact(byteOffset + 0x08L), datumShift.east());
     }
 
     private Encoder() {

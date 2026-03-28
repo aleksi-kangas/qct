@@ -91,7 +91,7 @@ class MagicNumberTest {
     void decodeLargeOffset() throws IOException {
       final Path tempFile = Files.createTempFile("magic-number-large-offset", ".bin");
       try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-        final long offset = 1024 * 1024 + 256; // large offset
+        final int offset = 1024 * 1024 + 256; // large offset
         QctWriter.writeInt(fileChannel, offset, 0x1423D5FF);
 
         final MagicNumber magic = MagicNumber.Decoder.decode(fileChannel, offset);
@@ -138,7 +138,7 @@ class MagicNumberTest {
       final Path tempFile = Files.createTempFile("magic-number-encode-all", ".bin");
       try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
         for (MagicNumber magic : MagicNumber.values()) {
-          final long offset = magic.ordinal() * 16L;
+          final int offset = magic.ordinal() * 16;
           MagicNumber.Encoder.encode(magic, fileChannel, offset);
 
           final MagicNumber decoded = MagicNumber.Decoder.decode(fileChannel, offset);
@@ -153,7 +153,7 @@ class MagicNumberTest {
 
   @Test
   void roundTrip() throws IOException {
-    final long byteOffset = 1024;
+    final int byteOffset = 1024;
     final Path tempFile = Files.createTempFile("magic-number-round-trip", ".bin");
     try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
       for (MagicNumber original : MagicNumber.values()) {

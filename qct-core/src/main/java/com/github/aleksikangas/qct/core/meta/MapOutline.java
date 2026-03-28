@@ -52,14 +52,14 @@ public record MapOutline(Point[] points) {
   }
 
   public static final class Decoder {
-    public static MapOutline decode(final FileChannel fileChannel, final long byteOffset) {
+    public static MapOutline decode(final FileChannel fileChannel, final int byteOffset) {
       final int pointCount = QctReader.readInt(fileChannel, byteOffset);
-      final int arrayByteOffset = QctReader.readPointer(fileChannel, byteOffset + 0x04L);
+      final int arrayByteOffset = QctReader.readPointer(fileChannel, Math.toIntExact(byteOffset + 0x04L));
       final MapOutline.Point[] points = new MapOutline.Point[pointCount];
       for (int i = 0; i < pointCount; ++i) {
-        final long pointByteOffset = arrayByteOffset + i * (0x08L + 0x08L);
+        final int pointByteOffset = Math.toIntExact(arrayByteOffset + i * (0x08L + 0x08L));
         points[i] = new MapOutline.Point(QctReader.readDouble(fileChannel, pointByteOffset),
-                                         QctReader.readDouble(fileChannel, pointByteOffset + 0x08L));
+                                         QctReader.readDouble(fileChannel, Math.toIntExact(pointByteOffset + 0x08L)));
       }
       return new MapOutline(points);
     }
@@ -69,7 +69,7 @@ public record MapOutline(Point[] points) {
   }
 
   public static final class Encoder {
-    public static void encode(final MapOutline mapOutline, final FileChannel fileChannel, final long byteOffset) {
+    public static void encode(final MapOutline mapOutline, final FileChannel fileChannel, final int byteOffset) {
       Objects.requireNonNull(mapOutline);
       Objects.requireNonNull(mapOutline.points());
 
@@ -78,15 +78,15 @@ public record MapOutline(Point[] points) {
 
       QctWriter.writeInt(fileChannel, byteOffset, pointCount);
 
-      final long arrayOffset = byteOffset + 0x08L;
-      QctWriter.writePointer(fileChannel, byteOffset + 0x04L, (int) arrayOffset);
+      final int arrayOffset = Math.toIntExact(byteOffset + 0x08L);
+      QctWriter.writePointer(fileChannel, Math.toIntExact(byteOffset + 0x04L), arrayOffset);
 
       for (int i = 0; i < pointCount; ++i) {
         final Point point = points[i];
-        final long pointByteOffset = arrayOffset + i * 16L;
+        final int pointByteOffset = Math.toIntExact(arrayOffset + i * 16L);
 
         QctWriter.writeDouble(fileChannel, pointByteOffset, point.latitude());
-        QctWriter.writeDouble(fileChannel, pointByteOffset + 0x08L, point.longitude());
+        QctWriter.writeDouble(fileChannel, Math.toIntExact(pointByteOffset + 0x08L), point.longitude());
       }
     }
 

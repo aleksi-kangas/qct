@@ -48,7 +48,7 @@ public enum FileFormatVersion {
   }
 
   public static final class Decoder {
-    public static FileFormatVersion decode(final FileChannel fileChannel, final long byteOffset) {
+    public static FileFormatVersion decode(final FileChannel fileChannel, final int byteOffset) {
       final int value = QctReader.readInt(fileChannel, byteOffset);
       return Arrays.stream(FileFormatVersion.values())
                    .filter(f -> f.value == value)
@@ -64,7 +64,7 @@ public enum FileFormatVersion {
   public static final class Encoder {
     public static void encode(final FileFormatVersion fileFormatVersion,
                               final FileChannel fileChannel,
-                              final long byteOffset) {
+                              final int byteOffset) {
       Objects.requireNonNull(fileFormatVersion);
       QctWriter.writeInt(fileChannel, byteOffset, fileFormatVersion.value);
     }

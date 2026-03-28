@@ -109,7 +109,7 @@ class FileFormatVersionTest {
     void decodeLargeOffset() throws IOException {
       final Path tempFile = Files.createTempFile("file-format-version-large-offset", ".bin");
       try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-        final long offset = 1024 * 1024; // 1MB offset
+        final int offset = 1024 * 1024; // 1MB offset
         QctWriter.writeInt(fileChannel, offset, 0x20000001);
 
         final FileFormatVersion version = FileFormatVersion.Decoder.decode(fileChannel, offset);
@@ -142,7 +142,7 @@ class FileFormatVersionTest {
       final Path tempFile = Files.createTempFile("file-format-version-encode-all", ".bin");
       try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
         for (FileFormatVersion version : FileFormatVersion.values()) {
-          final long offset = version.ordinal() * 8L; // spaced out
+          final int offset = version.ordinal() * 8;  // spaced out
 
           FileFormatVersion.Encoder.encode(version, fileChannel, offset);
 
@@ -158,7 +158,7 @@ class FileFormatVersionTest {
 
   @Test
   void roundTrip() throws IOException {
-    final long byteOffset = 512;
+    final int byteOffset = 512;
     final Path tempFile = Files.createTempFile("file-format-version-round-trip", ".bin");
     try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
       for (FileFormatVersion original : FileFormatVersion.values()) {

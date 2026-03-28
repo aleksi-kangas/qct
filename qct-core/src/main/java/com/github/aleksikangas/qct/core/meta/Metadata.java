@@ -78,7 +78,7 @@ public record Metadata(MagicNumber magicNumber,
                        Instant originalFileCreationTime,
                        ExtendedData extendedData,
                        MapOutline mapOutline) {
-  public static final long BYTE_OFFSET = 0x0000L;
+  public static final int BYTE_OFFSET = 0x0000;
 
   public Metadata {
     Objects.requireNonNull(magicNumber);
@@ -105,28 +105,31 @@ public record Metadata(MagicNumber magicNumber,
   public static final class Decoder {
     public static Metadata decode(final FileChannel fileChannel) {
       return new Metadata(MagicNumber.Decoder.decode(fileChannel, Metadata.BYTE_OFFSET),
-                          FileFormatVersion.Decoder.decode(fileChannel, Metadata.BYTE_OFFSET + 0x04L),
-                          QctReader.readInt(fileChannel, Metadata.BYTE_OFFSET + 0x08L),
-                          QctReader.readInt(fileChannel, Metadata.BYTE_OFFSET + 0x0CL),
-                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x10L),
-                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x14L),
-                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x18L),
-                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x1CL),
-                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x20L),
-                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x24L),
-                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x28L),
-                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x2CL),
-                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x30L),
-                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x34L),
-                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x38L),
-                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x3CL),
-                          Flag.Decoder.decode(fileChannel, Metadata.BYTE_OFFSET + 0x40),
-                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x44L),
-                          QctReader.readInt(fileChannel, Metadata.BYTE_OFFSET + 0x48L),
-                          Instant.ofEpochSecond(QctReader.readInt(fileChannel, Metadata.BYTE_OFFSET + 0x4CL)),
+                          FileFormatVersion.Decoder.decode(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x04L)),
+                          QctReader.readInt(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x08L)),
+                          QctReader.readInt(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x0CL)),
+                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x10L)),
+                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x14L)),
+                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x18L)),
+                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x1CL)),
+                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x20L)),
+                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x24L)),
+                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x28L)),
+                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x2CL)),
+                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x30L)),
+                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x34L)),
+                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x38L)),
+                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x3CL)),
+                          Flag.Decoder.decode(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x40L)),
+                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x44L)),
+                          QctReader.readInt(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x48L)),
+                          Instant.ofEpochSecond(QctReader.readInt(fileChannel,
+                                                                  Math.toIntExact(Metadata.BYTE_OFFSET + 0x4CL))),
                           ExtendedData.Decoder.decode(fileChannel,
-                                                      QctReader.readPointer(fileChannel, Metadata.BYTE_OFFSET + 0x54L)),
-                          MapOutline.Decoder.decode(fileChannel, Metadata.BYTE_OFFSET + 0x58L));
+                                                      QctReader.readPointer(fileChannel,
+                                                                            Math.toIntExact(Metadata.BYTE_OFFSET +
+                                                                                            0x54L))),
+                          MapOutline.Decoder.decode(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x58L)));
     }
 
     private Decoder() {

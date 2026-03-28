@@ -37,7 +37,7 @@ public enum Flag {
   }
 
   public static final class Decoder {
-    public static Set<Flag> decode(final FileChannel fileChannel, final long byteOffset) {
+    public static Set<Flag> decode(final FileChannel fileChannel, final int byteOffset) {
       final int value = QctReader.readInt(fileChannel, byteOffset);
       final Set<Flag> flags = EnumSet.noneOf(Flag.class);
       if ((value & MUST_HAVE_ORIGINAL_FILE.mask) != 0) {
@@ -54,7 +54,7 @@ public enum Flag {
   }
 
   public static final class Encoder {
-    public static void encode(final Set<Flag> flags, final FileChannel fileChannel, final long byteOffset) {
+    public static void encode(final Set<Flag> flags, final FileChannel fileChannel, final int byteOffset) {
       int bitField = 0;
       for (Flag flag : flags) {
         bitField |= flag.mask();

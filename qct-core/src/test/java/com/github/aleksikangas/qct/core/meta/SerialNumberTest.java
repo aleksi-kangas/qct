@@ -25,7 +25,38 @@ class SerialNumberTest {
 
     @Test
     void constructor() {
-      final int[] data = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32 };
+      final int[] data = { 1,
+                           2,
+                           3,
+                           4,
+                           5,
+                           6,
+                           7,
+                           8,
+                           9,
+                           10,
+                           11,
+                           12,
+                           13,
+                           14,
+                           15,
+                           16,
+                           17,
+                           18,
+                           19,
+                           20,
+                           21,
+                           22,
+                           23,
+                           24,
+                           25,
+                           26,
+                           27,
+                           28,
+                           29,
+                           30,
+                           31,
+                           32 };
       final var serialNumber = new SerialNumber(data);
 
       assertArrayEquals(data, serialNumber.bytes());
@@ -55,7 +86,38 @@ class SerialNumberTest {
 
     @Test
     void toStringTest() {
-      final int[] data = { 65, 66, 67, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+      final int[] data = { 65,
+                           66,
+                           67,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0 };
       final var serialNumber = new SerialNumber(data);
       final String str = serialNumber.toString();
 
@@ -93,7 +155,7 @@ class SerialNumberTest {
       }
       final Path tempFile = Files.createTempFile("serial-number-decode-offset", ".bin");
       try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-        final long offset = 1024 * 1024 + 512; // 1MB + 512 bytes
+        final int offset = 1024 * 1024 + 512; // 1MB + 512 bytes
         QctWriter.writeBytes(fileChannel, offset, expectedBytes);
 
         final SerialNumber serialNumber = SerialNumber.Decoder.decode(fileChannel, offset);
@@ -130,7 +192,7 @@ class SerialNumberTest {
 
   @Test
   void roundTrip() throws IOException {
-    final long byteOffset = 2048;
+    final int byteOffset = 2048;
     final int[] originalData = new int[32];
     for (int i = 0; i < 32; i++) {
       originalData[i] = (i + 50) * 3 % 256;

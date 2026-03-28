@@ -22,7 +22,7 @@ public final class QctReader {
    * @param byteOffset  the byte offset of the byte
    * @return read byte
    */
-  public static int readByte(final FileChannel fileChannel, final long byteOffset) {
+  public static int readByte(final FileChannel fileChannel, final int byteOffset) {
     return readBytes(fileChannel, byteOffset, 1)[0];
   }
 
@@ -34,7 +34,7 @@ public final class QctReader {
    * @param count       bytes to read
    * @return read bytes
    */
-  public static int[] readBytes(final FileChannel fileChannel, final long byteOffset, final int count) {
+  public static int[] readBytes(final FileChannel fileChannel, final int byteOffset, final int count) {
     final ByteBuffer byteBuffer = ByteBuffer.allocate(count);
     try {
       if (fileChannel.read(byteBuffer, byteOffset) == count) {
@@ -60,7 +60,7 @@ public final class QctReader {
    * @param count       bytes to read
    * @return read bytes, until count or EOF
    */
-  public static int[] readBytesSafe(final FileChannel fileChannel, final long byteOffset, final int count) {
+  public static int[] readBytesSafe(final FileChannel fileChannel, final int byteOffset, final int count) {
     final ByteBuffer byteBuffer = ByteBuffer.allocate(count);
     try {
       final int readCount = fileChannel.read(byteBuffer, byteOffset);
@@ -82,7 +82,7 @@ public final class QctReader {
    * @param byteOffset  the byte offset of the double
    * @return read double
    */
-  public static double readDouble(final FileChannel fileChannel, final long byteOffset) {
+  public static double readDouble(final FileChannel fileChannel, final int byteOffset) {
     final ByteBuffer byteBuffer = ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN);
     try {
       if (fileChannel.read(byteBuffer, byteOffset) == 8) {
@@ -103,10 +103,10 @@ public final class QctReader {
    * @param count       doubles to read
    * @return read doubles
    */
-  public static double[] readDoubles(final FileChannel fileChannel, final long byteOffset, final int count) {
+  public static double[] readDoubles(final FileChannel fileChannel, final int byteOffset, final int count) {
     final double[] doubles = new double[count];
     for (int i = 0; i < count; ++i) {
-      doubles[i] = QctReader.readDouble(fileChannel, byteOffset + i * 0x08L);
+      doubles[i] = QctReader.readDouble(fileChannel, byteOffset + i * 0x08);
     }
     return doubles;
   }
@@ -118,7 +118,7 @@ public final class QctReader {
    * @param byteOffset  the byte offset of the integer
    * @return read integer
    */
-  public static int readInt(final FileChannel fileChannel, final long byteOffset) {
+  public static int readInt(final FileChannel fileChannel, final int byteOffset) {
     final ByteBuffer byteBuffer = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN);
     try {
       if (fileChannel.read(byteBuffer, byteOffset) == 4) {
@@ -139,9 +139,9 @@ public final class QctReader {
    * @param fileChannel to read from
    * @param byteOffset  the byte offset of the pointer
    * @return read pointer
-   * @see #readInt(FileChannel, long)
+   * @see #readInt(FileChannel, int)
    */
-  public static int readPointer(final FileChannel fileChannel, final long byteOffset) {
+  public static int readPointer(final FileChannel fileChannel, final int byteOffset) {
     return readInt(fileChannel, byteOffset);
   }
 
@@ -152,11 +152,11 @@ public final class QctReader {
    * @param byteOffset  byte offset of the string
    * @return read string
    */
-  public static String readString(final FileChannel fileChannel, final long byteOffset) {
+  public static String readString(final FileChannel fileChannel, final int byteOffset) {
     final ByteBuffer byteBuffer = ByteBuffer.allocate(1);
     final StringBuilder stringBuilder = new StringBuilder();
     try {
-      while (fileChannel.read(byteBuffer, byteOffset + stringBuilder.length()) == 1) {
+      while (fileChannel.read(byteBuffer, Math.toIntExact(byteOffset + (long) stringBuilder.length())) == 1) {
         final byte b = byteBuffer.flip().get();
         if (b == 0) {
           return stringBuilder.toString();
@@ -179,7 +179,7 @@ public final class QctReader {
    * @param pointerByteOffset byte offset of the string pointer
    * @return read string
    */
-  public static String readStringFromPointer(final FileChannel fileChannel, final long pointerByteOffset) {
+  public static String readStringFromPointer(final FileChannel fileChannel, final int pointerByteOffset) {
     final int byteOffset = readPointer(fileChannel, pointerByteOffset);
     if (byteOffset != 0) {
       return readString(fileChannel, byteOffset);

@@ -35,12 +35,13 @@ public record LicenseInformation(int identifier,
   }
 
   public static final class Decoder {
-    public static LicenseInformation decode(final FileChannel fileChannel, final long byteOffset) {
+    public static LicenseInformation decode(final FileChannel fileChannel, final int byteOffset) {
       return new LicenseInformation(QctReader.readInt(fileChannel, byteOffset),
-                                    QctReader.readString(fileChannel, byteOffset + 0x0CL),
+                                    QctReader.readString(fileChannel, Math.toIntExact(byteOffset + 0x0CL)),
                                     SerialNumber.Decoder.decode(fileChannel,
                                                                 QctReader.readPointer(fileChannel,
-                                                                                      byteOffset + 0x10L)));
+                                                                                      Math.toIntExact(byteOffset +
+                                                                                                      0x10L))));
     }
 
     private Decoder() {
@@ -50,7 +51,7 @@ public record LicenseInformation(int identifier,
   public static final class Encoder {
     public static void encode(final LicenseInformation licenseInformation,
                               final FileChannel fileChannel,
-                              final long byteOffset) {
+                              final int byteOffset) {
       Objects.requireNonNull(licenseInformation);
       throw new UnsupportedOperationException("Not implemented");
     }

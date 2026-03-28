@@ -22,7 +22,7 @@ public final class QctWriter {
    * @param byteOffset  the byte offset where to write
    * @param value       the byte value to write (0-255)
    */
-  public static void writeByte(final FileChannel fileChannel, final long byteOffset, final int value) {
+  public static void writeByte(final FileChannel fileChannel, final int byteOffset, final int value) {
     writeBytes(fileChannel, byteOffset, new int[]{ value });
   }
 
@@ -33,7 +33,7 @@ public final class QctWriter {
    * @param byteOffset  the byte offset of the first byte
    * @param values      array of byte values to write (each 0-255)
    */
-  public static void writeBytes(final FileChannel fileChannel, final long byteOffset, final int[] values) {
+  public static void writeBytes(final FileChannel fileChannel, final int byteOffset, final int[] values) {
     final ByteBuffer byteBuffer = ByteBuffer.allocate(values.length);
     for (int b : values) {
       byteBuffer.put((byte) (b & 0xFF));
@@ -59,7 +59,7 @@ public final class QctWriter {
    * @param byteOffset  the byte offset where to write the double
    * @param value       the double value to write
    */
-  public static void writeDouble(final FileChannel fileChannel, final long byteOffset, final double value) {
+  public static void writeDouble(final FileChannel fileChannel, final int byteOffset, final double value) {
     final ByteBuffer byteBuffer = ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN);
     byteBuffer.putDouble(value);
     byteBuffer.flip();
@@ -79,9 +79,9 @@ public final class QctWriter {
    * @param byteOffset  byte offset of the first double
    * @param values      array of double values to write
    */
-  public static void writeDoubles(final FileChannel fileChannel, final long byteOffset, final double[] values) {
+  public static void writeDoubles(final FileChannel fileChannel, final int byteOffset, final double[] values) {
     for (int i = 0; i < values.length; ++i) {
-      writeDouble(fileChannel, byteOffset + i * 8L, values[i]);
+      writeDouble(fileChannel, Math.toIntExact(byteOffset + i * 8L), values[i]);
     }
   }
 
@@ -92,7 +92,7 @@ public final class QctWriter {
    * @param byteOffset  the byte offset where to write the integer
    * @param value       the integer value to write
    */
-  public static void writeInt(final FileChannel fileChannel, final long byteOffset, final int value) {
+  public static void writeInt(final FileChannel fileChannel, final int byteOffset, final int value) {
     final ByteBuffer byteBuffer = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN);
     byteBuffer.putInt(value);
     byteBuffer.flip();
@@ -112,9 +112,9 @@ public final class QctWriter {
    * @param fileChannel to write to
    * @param byteOffset  the byte offset where to write the pointer
    * @param pointer     the pointer value (byte offset in the file)
-   * @see #writeInt(FileChannel, long, int)
+   * @see #writeInt(FileChannel, int, int)
    */
-  public static void writePointer(final FileChannel fileChannel, final long byteOffset, final int pointer) {
+  public static void writePointer(final FileChannel fileChannel, final int byteOffset, final int pointer) {
     writeInt(fileChannel, byteOffset, pointer);
   }
 
@@ -128,7 +128,7 @@ public final class QctWriter {
    * @param byteOffset  the byte offset where to write the string
    * @param value       the string to write (null is treated as empty string)
    */
-  public static void writeString(final FileChannel fileChannel, final long byteOffset, final String value) {
+  public static void writeString(final FileChannel fileChannel, final int byteOffset, final String value) {
     final String str = (value == null) ? "" : value;
     final int length = str.length();
     final ByteBuffer byteBuffer = ByteBuffer.allocate(length + 1); // +1 for null terminator
@@ -170,8 +170,8 @@ public final class QctWriter {
    * @param value             the string to write
    */
   public static void writeStringWithPointer(final FileChannel fileChannel,
-                                            final long pointerByteOffset,
-                                            final long stringByteOffset,
+                                            final int pointerByteOffset,
+                                            final int stringByteOffset,
                                             final String value) {
     writeString(fileChannel, stringByteOffset, value);
     writePointer(fileChannel, pointerByteOffset, (int) stringByteOffset);

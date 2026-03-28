@@ -46,7 +46,7 @@ public record SerialNumber(int[] bytes) {
   }
 
   public static final class Decoder {
-    public static SerialNumber decode(final FileChannel fileChannel, final long byteOffset) {
+    public static SerialNumber decode(final FileChannel fileChannel, final int byteOffset) {
       return new SerialNumber(QctReader.readBytes(fileChannel, byteOffset, 32));
     }
 
@@ -55,7 +55,7 @@ public record SerialNumber(int[] bytes) {
   }
 
   public static final class Encoder {
-    public static void encode(final SerialNumber serialNumber, final FileChannel fileChannel, final long byteOffset) {
+    public static void encode(final SerialNumber serialNumber, final FileChannel fileChannel, final int byteOffset) {
       Objects.requireNonNull(serialNumber);
       QctWriter.writeBytes(fileChannel, byteOffset, serialNumber.bytes);
     }

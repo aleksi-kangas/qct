@@ -172,7 +172,7 @@ final class QctReaderTest {
       throw new IOException();
     });
 
-    final String result = QctReader.readString(mockFileChannel, 0L);
+    final String result = QctReader.readString(mockFileChannel, 0);
 
     assertEquals(expectedString, result);
     verify(mockFileChannel, times(expectedString.length() + 1)).read(any(ByteBuffer.class), anyLong());
@@ -187,7 +187,7 @@ final class QctReaderTest {
       return 1;
     });
 
-    final String result = QctReader.readString(mockFileChannel, 0L);
+    final String result = QctReader.readString(mockFileChannel, 0);
 
     assertEquals("", result);
     verify(mockFileChannel, times(1)).read(any(ByteBuffer.class), eq(0L));
@@ -197,17 +197,17 @@ final class QctReaderTest {
   @Test
   void readStringFromPointer() throws IOException {
     final String expectedString = "Pointer Test";
-    final long pointerValue = 100L;
-    final long pointerOffset = 0L;
+    final int pointerValue = 100;
+    final int pointerOffset = 0;
 
-    when(mockFileChannel.read(any(ByteBuffer.class), eq(pointerOffset))).thenAnswer(invocation -> {
+    when(mockFileChannel.read(any(ByteBuffer.class), eq((long) pointerOffset))).thenAnswer(invocation -> {
       final var byteBuffer = (ByteBuffer) invocation.getArgument(0);
       byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
       byteBuffer.putInt((int) pointerValue);
       return 4;
     });
 
-    when(mockFileChannel.read(any(ByteBuffer.class), geq(pointerValue))).thenAnswer(invocation -> {
+    when(mockFileChannel.read(any(ByteBuffer.class), geq((long) pointerValue))).thenAnswer(invocation -> {
       final var byteBuffer = (ByteBuffer) invocation.getArgument(0);
       final long byteOffset = invocation.getArgument(1);
       final int charIndex = (int) (byteOffset - pointerValue);
@@ -225,7 +225,7 @@ final class QctReaderTest {
 
     assertEquals(expectedString, result);
 
-    verify(mockFileChannel, times(1)).read(any(ByteBuffer.class), eq(pointerOffset));
+    verify(mockFileChannel, times(1)).read(any(ByteBuffer.class), eq((long) pointerOffset));
     verify(mockFileChannel, times(expectedString.length() + 1 + 1)).read(any(ByteBuffer.class), anyLong());
     verifyNoMoreInteractions(mockFileChannel);
   }
@@ -241,7 +241,7 @@ final class QctReaderTest {
       return 4;
     });
 
-    final String result = QctReader.readStringFromPointer(mockFileChannel, 0L);
+    final String result = QctReader.readStringFromPointer(mockFileChannel, 0);
 
     assertEquals("", result);
     verify(mockFileChannel, times(1)).read(any(ByteBuffer.class), eq(0L));

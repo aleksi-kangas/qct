@@ -76,7 +76,7 @@ class FlagTest {
       final Set<Flag> flags = EnumSet.of(Flag.ALLOW_CALIBRATION);
       final Path tempFile = Files.createTempFile("flag-offset", ".bin");
       try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-        long offset = 1024 * 1024; // 1MB offset
+        final int offset = 1024 * 1024; // 1MB offset
         Flag.Encoder.encode(flags, fileChannel, offset);
         final Set<Flag> decoded = Flag.Decoder.decode(fileChannel, offset);
 
@@ -156,7 +156,7 @@ class FlagTest {
   @Test
   void roundTripAllCombinations() throws IOException {
     final Set<Flag> original = EnumSet.of(Flag.MUST_HAVE_ORIGINAL_FILE, Flag.ALLOW_CALIBRATION);
-    final long byteOffset = 0x40;
+    final int byteOffset = 0x40;
     final Path tempFile = Files.createTempFile("flag-round-trip", ".bin");
     try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
       Flag.Encoder.encode(original, fileChannel, byteOffset);

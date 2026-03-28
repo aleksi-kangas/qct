@@ -74,7 +74,7 @@ class DatumShiftTest {
       final double east = 24.0;
       final Path tempFile = Files.createTempFile("datum-shift-decode-offset", ".bin");
       try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-        long offset = 1024 * 1024; // 1MB offset
+        final int offset = 1024 * 1024; // 1MB offset
         QctWriter.writeDouble(fileChannel, offset, north);
         QctWriter.writeDouble(fileChannel, offset + 8, east);
 
@@ -110,7 +110,7 @@ class DatumShiftTest {
 
   @Test
   void roundTrip() throws IOException {
-    final long byteOffset = 100;
+    final int byteOffset = 100;
     final var datumShift = new DatumShift(9876.54321, -1234.56789);
     final Path tempFile = Files.createTempFile("datum-shift-round-trip", ".bin");
     try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
