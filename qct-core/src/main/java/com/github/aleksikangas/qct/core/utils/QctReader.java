@@ -68,6 +68,9 @@ public final class QctReader {
     final ByteBuffer byteBuffer = ByteBuffer.allocate(count);
     try {
       final int readCount = fileChannel.read(byteBuffer, byteOffset);
+      if (readCount <= 0) {
+        return new int[0];
+      }
       byteBuffer.flip();
       final int[] bytes = new int[readCount];
       for (int i = 0; i < readCount; ++i) {
@@ -160,7 +163,7 @@ public final class QctReader {
         if (b == 0) {
           return stringBuilder.toString();
         }
-        final char c = (char) (b & 0xFF);  // ava bytes are signed -> perform unsigned conversion
+        final char c = (char) (b & 0xFF);  // Java bytes are signed -> perform unsigned conversion
         stringBuilder.append(c);
         byteBuffer.clear();
       }
