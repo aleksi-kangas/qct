@@ -29,6 +29,11 @@ public record DatumShift(double north,
                             qctReader.readDouble(Math.toIntExact(byteOffset + 0x08L)));
     }
 
+    public static DatumShift decodeFromPointer(final QctReader qctReader, final int byteOffset) {
+      final int pointer = qctReader.readPointer(byteOffset);
+      return decode(qctReader, pointer);
+    }
+
     private Decoder() {
     }
   }
@@ -38,6 +43,12 @@ public record DatumShift(double north,
       Objects.requireNonNull(datumShift);
       qctWriter.writeDouble(byteOffset, datumShift.north());
       qctWriter.writeDouble(Math.toIntExact(byteOffset + 0x08L), datumShift.east());
+    }
+
+    public static void encodeWithPointer(final QctWriter qctWriter, final DatumShift datumShift, final int byteOffset) {
+      final int pointer = qctWriter.allocate(DatumShift.SIZE);
+      qctWriter.writePointer(byteOffset, pointer);
+      encode(qctWriter, datumShift, pointer);
     }
 
     private Encoder() {

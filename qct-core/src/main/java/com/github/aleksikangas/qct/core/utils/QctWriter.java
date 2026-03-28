@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -177,27 +178,17 @@ public final class QctWriter {
    */
   public void writeString(final int byteOffset, final String value) {
     final String str = (value == null) ? "" : value;
-    final int length = str.length();
-    final ByteBuffer byteBuffer = ByteBuffer.allocate(length + 1); // +1 for null terminator
-
-    for (int i = 0; i < length; ++i) {
-      char c = str.charAt(i);
-      if (c > 255) {
-        throw new QctRuntimeException(String.format(
-                "Character '%c' (U+%04X) cannot be written as single byte in string at offset %d",
-                c,
-                (int) c,
-                byteOffset));
-      }
-      byteBuffer.put((byte) c);
-    }
-    byteBuffer.put((byte) 0); // null terminator
+    // Convert string to ASCII bytes
+    final byte[] bytes = str.getBytes(StandardCharsets.US_ASCII);
+    final ByteBuffer byteBuffer = ByteBuffer.allocate(bytes.length + 1);
+    byteBuffer.put(bytes);
+    byteBuffer.put((byte) 0);
     byteBuffer.flip();
     try {
       final int written = fileChannel.write(byteBuffer, byteOffset);
-      if (written != length + 1) {
+      if (written != bytes.length + 1) {
         throw new QctRuntimeException(String.format("Failed to write %d-byte null-terminated string to offset %d",
-                                                    length + 1,
+                                                    bytes.length + 1,
                                                     byteOffset));
       }
     } catch (final IOException e) {

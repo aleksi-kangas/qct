@@ -79,6 +79,7 @@ public record Metadata(MagicNumber magicNumber,
                        ExtendedData extendedData,
                        MapOutline mapOutline) {
   public static final int BYTE_OFFSET = 0x0000;
+  public static final int SIZE = 0x24 * 0x04;
 
   public Metadata {
     Objects.requireNonNull(magicNumber);
@@ -124,9 +125,8 @@ public record Metadata(MagicNumber magicNumber,
                           qctReader.readStringFromPointer(Math.toIntExact(Metadata.BYTE_OFFSET + 0x44L)),
                           qctReader.readInt(Math.toIntExact(Metadata.BYTE_OFFSET + 0x48L)),
                           Instant.ofEpochSecond(qctReader.readInt(Math.toIntExact(Metadata.BYTE_OFFSET + 0x4CL))),
-                          ExtendedData.Decoder.decode(qctReader,
-                                                      qctReader.readPointer(Math.toIntExact(Metadata.BYTE_OFFSET +
-                                                                                            0x54L))),
+                          ExtendedData.Decoder.decodeFromPointer(qctReader,
+                                                                 Math.toIntExact(Metadata.BYTE_OFFSET + 0x54L)),
                           MapOutline.Decoder.decode(qctReader, Math.toIntExact(Metadata.BYTE_OFFSET + 0x58L)));
     }
 
@@ -138,7 +138,34 @@ public record Metadata(MagicNumber magicNumber,
   public static final class Encoder {
     public static void encode(final QctWriter qctWriter, final Metadata metadata) {
       Objects.requireNonNull(metadata);
-      throw new UnsupportedOperationException("Not implemented");
+
+      MagicNumber.Encoder.encode(qctWriter, metadata.magicNumber, Metadata.BYTE_OFFSET);
+      FileFormatVersion.Encoder.encode(qctWriter,
+                                       metadata.fileFormatVersion,
+                                       Math.toIntExact(Metadata.BYTE_OFFSET + 0x04L));
+      qctWriter.writeInt(Math.toIntExact(Metadata.BYTE_OFFSET + 0x08L), metadata.widthTiles);
+      qctWriter.writeInt(Math.toIntExact(Metadata.BYTE_OFFSET + 0x0CL), metadata.heightTiles);
+      qctWriter.allocateWriteString(Math.toIntExact(Metadata.BYTE_OFFSET + 0x10L), metadata.longTitle);
+      qctWriter.allocateWriteString(Math.toIntExact(Metadata.BYTE_OFFSET + 0x14L), metadata.name);
+      qctWriter.allocateWriteString(Math.toIntExact(Metadata.BYTE_OFFSET + 0x18L), metadata.identifier);
+      qctWriter.allocateWriteString(Math.toIntExact(Metadata.BYTE_OFFSET + 0x1CL), metadata.edition);
+      qctWriter.allocateWriteString(Math.toIntExact(Metadata.BYTE_OFFSET + 0x20L), metadata.revision);
+      qctWriter.allocateWriteString(Math.toIntExact(Metadata.BYTE_OFFSET + 0x24L), metadata.keywords);
+      qctWriter.allocateWriteString(Math.toIntExact(Metadata.BYTE_OFFSET + 0x28L), metadata.copyright);
+      qctWriter.allocateWriteString(Math.toIntExact(Metadata.BYTE_OFFSET + 0x2CL), metadata.scale);
+      qctWriter.allocateWriteString(Math.toIntExact(Metadata.BYTE_OFFSET + 0x30L), metadata.datum);
+      qctWriter.allocateWriteString(Math.toIntExact(Metadata.BYTE_OFFSET + 0x34L), metadata.depths);
+      qctWriter.allocateWriteString(Math.toIntExact(Metadata.BYTE_OFFSET + 0x38L), metadata.heights);
+      qctWriter.allocateWriteString(Math.toIntExact(Metadata.BYTE_OFFSET + 0x3CL), metadata.projection);
+      Flag.Encoder.encode(qctWriter, metadata.flags, Math.toIntExact(Metadata.BYTE_OFFSET + 0x40L));
+      qctWriter.allocateWriteString(Math.toIntExact(Metadata.BYTE_OFFSET + 0x44L), metadata.originalFileName);
+      qctWriter.writeInt(Math.toIntExact(Metadata.BYTE_OFFSET + 0x48L), metadata.originalFileSize);
+      qctWriter.writeInt(Math.toIntExact(Metadata.BYTE_OFFSET + 0x4CL),
+                         (int) metadata.originalFileCreationTime.getEpochSecond());
+      ExtendedData.Encoder.encodeWithPointer(qctWriter,
+                                             metadata.extendedData,
+                                             Math.toIntExact(Metadata.BYTE_OFFSET + 0x54L));
+      MapOutline.Encoder.encode(qctWriter, metadata.mapOutline, Math.toIntExact(Metadata.BYTE_OFFSET + 0x58L));
     }
 
     private Encoder() {

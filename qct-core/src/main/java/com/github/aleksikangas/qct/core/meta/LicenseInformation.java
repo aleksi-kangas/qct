@@ -27,20 +27,23 @@ import java.util.Objects;
  * </pre>
  */
 public record LicenseInformation(int identifier,
-                                 String description,
                                  SerialNumber serialNumber) {
+  public static final int SIZE = 0x28 + 0x64;
+
   public LicenseInformation {
-    Objects.requireNonNull(description);
     Objects.requireNonNull(serialNumber);
   }
 
   public static final class Decoder {
     public static LicenseInformation decode(final QctReader qctReader, final int byteOffset) {
       return new LicenseInformation(qctReader.readInt(byteOffset),
-                                    qctReader.readString(Math.toIntExact(byteOffset + 0x0CL)),
-                                    SerialNumber.Decoder.decode(qctReader,
-                                                                qctReader.readPointer(Math.toIntExact(byteOffset +
-                                                                                                      0x10L))));
+                                    SerialNumber.Decoder.decodeFromPointer(qctReader,
+                                                                           Math.toIntExact(byteOffset + 0x10L)));
+    }
+
+    public static LicenseInformation decodeFromPointer(final QctReader qctReader, final int byteOffset) {
+      final int pointer = qctReader.readPointer(byteOffset);
+      return decode(qctReader, pointer);
     }
 
     private Decoder() {
@@ -52,7 +55,19 @@ public record LicenseInformation(int identifier,
                               final LicenseInformation licenseInformation,
                               final int byteOffset) {
       Objects.requireNonNull(licenseInformation);
-      throw new UnsupportedOperationException("Not implemented");
+
+      qctWriter.writeInt(byteOffset, licenseInformation.identifier());
+      SerialNumber.Encoder.encodeWithPointer(qctWriter,
+                                             licenseInformation.serialNumber,
+                                             Math.toIntExact(byteOffset + 0x10L));
+    }
+
+    public static void encodeWithPointer(final QctWriter qctWriter,
+                                         final LicenseInformation licenseInformation,
+                                         final int byteOffset) {
+      final int pointer = qctWriter.allocate(LicenseInformation.SIZE);
+      qctWriter.writePointer(byteOffset, pointer);
+      encode(qctWriter, licenseInformation, pointer);
     }
 
     private Encoder() {

@@ -152,11 +152,8 @@ final class QctWriterTest {
 
   @Test
   void writeString_nonAsciiCharacter_throwsException() {
-    String badString = "Hello 😊";
-
-    QctRuntimeException exception = assertThrows(QctRuntimeException.class, () -> qctWriter.writeString(0, badString));
-
-    assertTrue(exception.getMessage().contains("cannot be written as single byte"));
+    final String badString = "Hello 😊";
+    assertThrows(QctRuntimeException.class, () -> qctWriter.writeString(0, badString));
   }
 
   @Test

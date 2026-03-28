@@ -48,7 +48,8 @@ public record QctFile(Metadata metadata) {
   public static final class Encoder {
     public static void encode(final QctWriter qctWriter, final QctFile qctFile) {
       Objects.requireNonNull(qctFile);
-      throw new UnsupportedOperationException("Not implemented");
+
+      Metadata.Encoder.encode(qctWriter, qctFile.metadata());
     }
 
     private Encoder() {

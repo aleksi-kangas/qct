@@ -21,6 +21,9 @@ import java.util.Objects;
  */
 public record DigitalMapShop(int size,
                              String qc3Url) {
+  @SuppressWarnings("java:S1845")
+  public static final int SIZE = 0x04 + 0x04;
+
   public DigitalMapShop {
     Objects.requireNonNull(qc3Url);
   }
@@ -31,6 +34,11 @@ public record DigitalMapShop(int size,
                                 qctReader.readStringFromPointer(Math.toIntExact(byteOffset + 0x04L)));
     }
 
+    public static DigitalMapShop decodeFromPointer(final QctReader qctReader, final int byteOffset) {
+      final int pointer = qctReader.readPointer(byteOffset);
+      return decode(qctReader, pointer);
+    }
+
     private Decoder() {
     }
   }
@@ -38,7 +46,17 @@ public record DigitalMapShop(int size,
   public static final class Encoder {
     public static void encode(final QctWriter qctWriter, final DigitalMapShop digitalMapShop, final int byteOffset) {
       Objects.requireNonNull(digitalMapShop);
-      throw new UnsupportedOperationException("Not implemented");
+
+      qctWriter.writeInt(byteOffset, digitalMapShop.size);
+      qctWriter.allocateWriteString(Math.toIntExact(byteOffset + 0x04L), digitalMapShop.qc3Url);
+    }
+
+    public static void encodeWithPointer(final QctWriter qctWriter,
+                                         final DigitalMapShop digitalMapShop,
+                                         final int byteOffset) {
+      final int pointer = qctWriter.allocate(DigitalMapShop.SIZE);
+      qctWriter.writePointer(byteOffset, pointer);
+      encode(qctWriter, digitalMapShop, pointer);
     }
 
     private Encoder() {

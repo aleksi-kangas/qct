@@ -53,6 +53,11 @@ public record SerialNumber(int[] bytes) {
       return new SerialNumber(qctReader.readBytes(byteOffset, SIZE));
     }
 
+    public static SerialNumber decodeFromPointer(final QctReader qctReader, final int byteOffset) {
+      final int pointer = qctReader.readPointer(byteOffset);
+      return decode(qctReader, pointer);
+    }
+
     private Decoder() {
     }
   }
@@ -61,6 +66,14 @@ public record SerialNumber(int[] bytes) {
     public static void encode(final QctWriter qctWriter, final SerialNumber serialNumber, final int byteOffset) {
       Objects.requireNonNull(serialNumber);
       qctWriter.writeBytes(byteOffset, serialNumber.bytes);
+    }
+
+    public static void encodeWithPointer(final QctWriter qctWriter,
+                                         final SerialNumber serialNumber,
+                                         final int byteOffset) {
+      final int pointer = qctWriter.allocate(SerialNumber.SIZE);
+      qctWriter.writePointer(byteOffset, pointer);
+      encode(qctWriter, serialNumber, pointer);
     }
 
     private Encoder() {

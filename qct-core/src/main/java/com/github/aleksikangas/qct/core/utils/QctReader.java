@@ -6,10 +6,12 @@ package com.github.aleksikangas.qct.core.utils;
 
 import com.github.aleksikangas.qct.core.exception.QctRuntimeException;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 /**
@@ -156,18 +158,20 @@ public final class QctReader {
    */
   public String readString(final int byteOffset) {
     final ByteBuffer byteBuffer = ByteBuffer.allocate(1);
-    final StringBuilder stringBuilder = new StringBuilder();
+    final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
     try {
-      while (fileChannel.read(byteBuffer, Math.toIntExact(byteOffset + (long) stringBuilder.length())) == 1) {
-        final byte b = byteBuffer.flip().get();
-        if (b == 0) {
-          return stringBuilder.toString();
-        }
-        final char c = (char) (b & 0xFF);  // Java bytes are signed -> perform unsigned conversion
-        stringBuilder.append(c);
+      int position = byteOffset;
+      while (fileChannel.read(byteBuffer, position) == 1) {
+        byteBuffer.flip();
+        byte b = byteBuffer.get();
         byteBuffer.clear();
+        if (b == 0) {
+          break;  // NULL
+        }
+        byteStream.write(b);
+        position++;
       }
-      throw new QctRuntimeException(String.format("Failed to read string from: %d", byteOffset));
+      return byteStream.toString(StandardCharsets.US_ASCII);
     } catch (final IOException e) {
       throw new QctRuntimeException(e);
     }
