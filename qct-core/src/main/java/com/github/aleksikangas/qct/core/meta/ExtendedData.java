@@ -4,6 +4,9 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
+import com.github.aleksikangas.qct.core.utils.QctReader;
+
+import java.nio.channels.FileChannel;
 import java.util.Objects;
 
 /**
@@ -35,5 +38,32 @@ public record ExtendedData(String mapType,
     Objects.requireNonNull(licenseInformation);
     Objects.requireNonNull(associatedData);
     Objects.requireNonNull(digitalMapShop);
+  }
+
+  public static final class Decoder {
+    public static ExtendedData decode(final FileChannel fileChannel, final long byteOffset) {
+      return new ExtendedData(QctReader.readStringFromPointer(fileChannel, byteOffset),
+                              DatumShift.Decoder.decode(fileChannel,
+                                                        QctReader.readPointer(fileChannel, byteOffset + 0x04L)),
+                              QctReader.readStringFromPointer(fileChannel, byteOffset + 0x08L),
+                              LicenseInformation.Decoder.decode(fileChannel,
+                                                                QctReader.readPointer(fileChannel, byteOffset + 0x14L)),
+                              QctReader.readStringFromPointer(fileChannel, byteOffset + 0x18L),
+                              DigitalMapShop.Decoder.decode(fileChannel,
+                                                            QctReader.readPointer(fileChannel, byteOffset + 0x1CL)));
+    }
+
+    private Decoder() {
+    }
+  }
+
+  public static final class Encoder {
+    public static void encode(final ExtendedData extendedData, final FileChannel fileChannel, final long byteOffset) {
+      Objects.requireNonNull(extendedData);
+      throw new UnsupportedOperationException("Not implemented");
+    }
+
+    private Encoder() {
+    }
   }
 }

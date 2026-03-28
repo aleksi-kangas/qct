@@ -4,6 +4,12 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
+import com.github.aleksikangas.qct.core.utils.QctReader;
+import com.github.aleksikangas.qct.core.utils.QctWriter;
+
+import java.nio.channels.FileChannel;
+import java.util.Objects;
+
 /**
  * <pre>
  * +--------+-----------+-------------------+
@@ -16,4 +22,24 @@ package com.github.aleksikangas.qct.core.meta;
  */
 public record DatumShift(double north,
                          double east) {
+  public static final class Decoder {
+    public static DatumShift decode(final FileChannel fileChannel, final long byteOffset) {
+      return new DatumShift(QctReader.readDouble(fileChannel, byteOffset),
+                            QctReader.readDouble(fileChannel, byteOffset + 0x08L));
+    }
+
+    private Decoder() {
+    }
+  }
+
+  public static final class Encoder {
+    public static void encode(final DatumShift datumShift, final FileChannel fileChannel, final long byteOffset) {
+      Objects.requireNonNull(datumShift);
+      QctWriter.writeDouble(fileChannel, byteOffset, datumShift.north());
+      QctWriter.writeDouble(fileChannel, byteOffset + 0x08L, datumShift.east());
+    }
+
+    private Encoder() {
+    }
+  }
 }

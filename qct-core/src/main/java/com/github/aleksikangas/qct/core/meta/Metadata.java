@@ -4,6 +4,9 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
+import com.github.aleksikangas.qct.core.utils.QctReader;
+
+import java.nio.channels.FileChannel;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Set;
@@ -97,5 +100,47 @@ public record Metadata(MagicNumber magicNumber,
     Objects.requireNonNull(originalFileCreationTime);
     Objects.requireNonNull(extendedData);
     Objects.requireNonNull(mapOutline);
+  }
+
+  public static final class Decoder {
+    public static Metadata decode(final FileChannel fileChannel) {
+      return new Metadata(MagicNumber.Decoder.decode(fileChannel, Metadata.BYTE_OFFSET),
+                          FileFormatVersion.Decoder.decode(fileChannel, Metadata.BYTE_OFFSET + 0x04L),
+                          QctReader.readInt(fileChannel, Metadata.BYTE_OFFSET + 0x08L),
+                          QctReader.readInt(fileChannel, Metadata.BYTE_OFFSET + 0x0CL),
+                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x10L),
+                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x14L),
+                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x18L),
+                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x1CL),
+                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x20L),
+                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x24L),
+                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x28L),
+                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x2CL),
+                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x30L),
+                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x34L),
+                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x38L),
+                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x3CL),
+                          Flag.Decoder.decode(fileChannel, Metadata.BYTE_OFFSET + 0x40),
+                          QctReader.readStringFromPointer(fileChannel, Metadata.BYTE_OFFSET + 0x44L),
+                          QctReader.readInt(fileChannel, Metadata.BYTE_OFFSET + 0x48L),
+                          Instant.ofEpochSecond(QctReader.readInt(fileChannel, Metadata.BYTE_OFFSET + 0x4CL)),
+                          ExtendedData.Decoder.decode(fileChannel,
+                                                      QctReader.readPointer(fileChannel, Metadata.BYTE_OFFSET + 0x54L)),
+                          MapOutline.Decoder.decode(fileChannel, Metadata.BYTE_OFFSET + 0x58L));
+    }
+
+    private Decoder() {
+
+    }
+  }
+
+  public static final class Encoder {
+    public static void encode(final Metadata metadata, final FileChannel fileChannel) {
+      Objects.requireNonNull(metadata);
+      throw new UnsupportedOperationException("Not implemented");
+    }
+
+    private Encoder() {
+    }
   }
 }

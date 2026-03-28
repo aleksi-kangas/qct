@@ -4,9 +4,11 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
-import java.util.ArrayList;
+import com.github.aleksikangas.qct.core.utils.QctReader;
+import com.github.aleksikangas.qct.core.utils.QctWriter;
+
+import java.nio.channels.FileChannel;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -21,23 +23,46 @@ import java.util.Set;
  * </pre>
  */
 public enum Flag {
-  MUST_HAVE_ORIGINAL_FILE(0),
-  ALLOW_CALIBRATION(1);
+  MUST_HAVE_ORIGINAL_FILE(1),
+  ALLOW_CALIBRATION(1 << 1);
 
-  private final int value;
+  private final int mask;
 
   Flag(final int value) {
-    this.value = value;
+    this.mask = value;
   }
 
-  public static Set<Flag> flagsOf(final int x) {
-    final List<Flag> flagList = new ArrayList<>();
-    if ((x & MUST_HAVE_ORIGINAL_FILE.value) == MUST_HAVE_ORIGINAL_FILE.value) {
-      flagList.add(MUST_HAVE_ORIGINAL_FILE);
+  public int mask() {
+    return mask;
+  }
+
+  public static final class Decoder {
+    public static Set<Flag> decode(final FileChannel fileChannel, final long byteOffset) {
+      final int value = QctReader.readInt(fileChannel, byteOffset);
+      final Set<Flag> flags = EnumSet.noneOf(Flag.class);
+      if ((value & MUST_HAVE_ORIGINAL_FILE.mask) != 0) {
+        flags.add(MUST_HAVE_ORIGINAL_FILE);
+      }
+      if ((value & ALLOW_CALIBRATION.mask) != 0) {
+        flags.add(ALLOW_CALIBRATION);
+      }
+      return flags;
     }
-    if ((x & ALLOW_CALIBRATION.value) == ALLOW_CALIBRATION.value) {
-      flagList.add(ALLOW_CALIBRATION);
+
+    private Decoder() {
     }
-    return EnumSet.copyOf(flagList);
+  }
+
+  public static final class Encoder {
+    public static void encode(final Set<Flag> flags, final FileChannel fileChannel, final long byteOffset) {
+      int bitField = 0;
+      for (Flag flag : flags) {
+        bitField |= flag.mask();
+      }
+      QctWriter.writeInt(fileChannel, byteOffset, bitField);
+    }
+
+    private Encoder() {
+    }
   }
 }

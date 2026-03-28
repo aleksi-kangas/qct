@@ -4,7 +4,12 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
+import com.github.aleksikangas.qct.core.utils.QctReader;
+import com.github.aleksikangas.qct.core.utils.QctWriter;
+
+import java.nio.channels.FileChannel;
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * <pre>
@@ -29,12 +34,8 @@ public enum FileFormatVersion {
     this.value = value;
   }
 
-  public static FileFormatVersion of(final int value) {
-    return Arrays.stream(FileFormatVersion.values())
-                 .filter(f -> f.value == value)
-                 .findFirst()
-                 .orElseThrow(() -> new IllegalArgumentException(String.format("Unknown FileFormatVersion: %d",
-                                                                               value)));
+  public int value() {
+    return value;
   }
 
   @Override
@@ -44,5 +45,31 @@ public enum FileFormatVersion {
       case QUICK_CHART_SUPPORTING_LICENSE_MANAGEMENT -> "Quick Chart supporting License Management";
       case QC3 -> "QC3 Format";
     };
+  }
+
+  public static final class Decoder {
+    public static FileFormatVersion decode(final FileChannel fileChannel, final long byteOffset) {
+      final int value = QctReader.readInt(fileChannel, byteOffset);
+      return Arrays.stream(FileFormatVersion.values())
+                   .filter(f -> f.value == value)
+                   .findFirst()
+                   .orElseThrow(() -> new IllegalArgumentException(String.format("Unknown FileFormatVersion: %d",
+                                                                                 value)));
+    }
+
+    private Decoder() {
+    }
+  }
+
+  public static final class Encoder {
+    public static void encode(final FileFormatVersion fileFormatVersion,
+                              final FileChannel fileChannel,
+                              final long byteOffset) {
+      Objects.requireNonNull(fileFormatVersion);
+      QctWriter.writeInt(fileChannel, byteOffset, fileFormatVersion.value);
+    }
+
+    private Encoder() {
+    }
   }
 }

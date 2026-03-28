@@ -4,9 +4,16 @@
 
 package com.github.aleksikangas.qct.core;
 
+import com.github.aleksikangas.qct.core.exception.QctRuntimeException;
 import com.github.aleksikangas.qct.core.meta.Metadata;
 
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * <pre>
@@ -25,5 +32,34 @@ import java.util.Objects;
 public record QctFile(Metadata metadata) {
   public QctFile {
     Objects.requireNonNull(metadata);
+  }
+
+  public static final class Decoder {
+    public static QctFile decode(final FileChannel fileChannel) {
+      return new QctFile(Metadata.Decoder.decode(fileChannel));
+    }
+
+    private Decoder() {
+    }
+  }
+
+  public static final class Encoder {
+    public static void encode(final QctFile qctFile, final FileChannel fileChannel) {
+      Objects.requireNonNull(qctFile);
+      throw new UnsupportedOperationException("Not implemented");
+    }
+
+    private Encoder() {
+    }
+  }
+
+  static void main(final String[] args) {
+    final Path path = Paths.get(args[0]);
+    try (final var fileChannel = FileChannel.open(path, Set.of(StandardOpenOption.READ))) {
+      final QctFile qctFile = QctFile.Decoder.decode(fileChannel);
+      System.out.println(qctFile);
+    } catch (final IOException e) {
+      throw new QctRuntimeException(e);
+    }
   }
 }

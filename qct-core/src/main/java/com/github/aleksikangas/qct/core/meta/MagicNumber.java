@@ -4,7 +4,12 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
+import com.github.aleksikangas.qct.core.utils.QctReader;
+import com.github.aleksikangas.qct.core.utils.QctWriter;
+
+import java.nio.channels.FileChannel;
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * <pre>
@@ -27,11 +32,8 @@ public enum MagicNumber {
     this.value = value;
   }
 
-  public static MagicNumber of(final int value) {
-    return Arrays.stream(MagicNumber.values())
-                 .filter(f -> f.value == value)
-                 .findFirst()
-                 .orElseThrow(() -> new IllegalArgumentException(String.format("Unknown MagicNumber: %d", value)));
+  public int value() {
+    return value;
   }
 
   @Override
@@ -40,5 +42,28 @@ public enum MagicNumber {
       case QUICK_CHART_INFORMATION -> "Quick Chart Information";
       case QUICK_CHART_MAP -> "Quick Chart Map";
     };
+  }
+
+  public static final class Decoder {
+    public static MagicNumber decode(final FileChannel fileChannel, final long byteOffset) {
+      final int value = QctReader.readInt(fileChannel, byteOffset);
+      return Arrays.stream(MagicNumber.values())
+                   .filter(f -> f.value == value)
+                   .findFirst()
+                   .orElseThrow(() -> new IllegalArgumentException(String.format("Unknown MagicNumber: %d", value)));
+    }
+
+    private Decoder() {
+    }
+  }
+
+  public static final class Encoder {
+    public static void encode(final MagicNumber magicNumber, final FileChannel fileChannel, final long byteOffset) {
+      Objects.requireNonNull(magicNumber);
+      QctWriter.writeInt(fileChannel, byteOffset, magicNumber.value);
+    }
+
+    private Encoder() {
+    }
   }
 }

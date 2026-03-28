@@ -4,6 +4,9 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
+import com.github.aleksikangas.qct.core.utils.QctReader;
+
+import java.nio.channels.FileChannel;
 import java.util.Objects;
 
 /**
@@ -29,5 +32,30 @@ public record LicenseInformation(int identifier,
   public LicenseInformation {
     Objects.requireNonNull(description);
     Objects.requireNonNull(serialNumber);
+  }
+
+  public static final class Decoder {
+    public static LicenseInformation decode(final FileChannel fileChannel, final long byteOffset) {
+      return new LicenseInformation(QctReader.readInt(fileChannel, byteOffset),
+                                    QctReader.readString(fileChannel, byteOffset + 0x0CL),
+                                    SerialNumber.Decoder.decode(fileChannel,
+                                                                QctReader.readPointer(fileChannel,
+                                                                                      byteOffset + 0x10L)));
+    }
+
+    private Decoder() {
+    }
+  }
+
+  public static final class Encoder {
+    public static void encode(final LicenseInformation licenseInformation,
+                              final FileChannel fileChannel,
+                              final long byteOffset) {
+      Objects.requireNonNull(licenseInformation);
+      throw new UnsupportedOperationException("Not implemented");
+    }
+
+    private Encoder() {
+    }
   }
 }

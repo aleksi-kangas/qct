@@ -5,7 +5,11 @@
 package com.github.aleksikangas.qct.core.meta;
 
 
+import com.github.aleksikangas.qct.core.utils.QctReader;
+import com.github.aleksikangas.qct.core.utils.QctWriter;
+
 import javax.annotation.Nonnull;
+import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -45,5 +49,48 @@ public record MapOutline(Point[] points) {
 
   public record Point(double latitude,
                       double longitude) {
+  }
+
+  public static final class Decoder {
+    public static MapOutline decode(final FileChannel fileChannel, final long byteOffset) {
+      final int pointCount = QctReader.readInt(fileChannel, byteOffset);
+      final int arrayByteOffset = QctReader.readPointer(fileChannel, byteOffset + 0x04L);
+      final MapOutline.Point[] points = new MapOutline.Point[pointCount];
+      for (int i = 0; i < pointCount; ++i) {
+        final long pointByteOffset = arrayByteOffset + i * (0x08L + 0x08L);
+        points[i] = new MapOutline.Point(QctReader.readDouble(fileChannel, pointByteOffset),
+                                         QctReader.readDouble(fileChannel, pointByteOffset + 0x08L));
+      }
+      return new MapOutline(points);
+    }
+
+    private Decoder() {
+    }
+  }
+
+  public static final class Encoder {
+    public static void encode(final MapOutline mapOutline, final FileChannel fileChannel, final long byteOffset) {
+      Objects.requireNonNull(mapOutline);
+      Objects.requireNonNull(mapOutline.points());
+
+      final Point[] points = mapOutline.points();
+      final int pointCount = points.length;
+
+      QctWriter.writeInt(fileChannel, byteOffset, pointCount);
+
+      final long arrayOffset = byteOffset + 0x08L;
+      QctWriter.writePointer(fileChannel, byteOffset + 0x04L, (int) arrayOffset);
+
+      for (int i = 0; i < pointCount; ++i) {
+        final Point point = points[i];
+        final long pointByteOffset = arrayOffset + i * 16L;
+
+        QctWriter.writeDouble(fileChannel, pointByteOffset, point.latitude());
+        QctWriter.writeDouble(fileChannel, pointByteOffset + 0x08L, point.longitude());
+      }
+    }
+
+    private Encoder() {
+    }
   }
 }
