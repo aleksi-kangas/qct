@@ -5,8 +5,8 @@
 package com.github.aleksikangas.qct.core.meta;
 
 import com.github.aleksikangas.qct.core.utils.QctReader;
+import com.github.aleksikangas.qct.core.utils.QctWriter;
 
-import java.nio.channels.FileChannel;
 import java.util.Objects;
 
 /**
@@ -26,9 +26,9 @@ public record DigitalMapShop(int size,
   }
 
   public static final class Decoder {
-    public static DigitalMapShop decode(final FileChannel fileChannel, final int byteOffset) {
-      return new DigitalMapShop(QctReader.readInt(fileChannel, byteOffset),
-                                QctReader.readStringFromPointer(fileChannel, Math.toIntExact(byteOffset + 0x04L)));
+    public static DigitalMapShop decode(final QctReader qctReader, final int byteOffset) {
+      return new DigitalMapShop(qctReader.readInt(byteOffset),
+                                qctReader.readStringFromPointer(Math.toIntExact(byteOffset + 0x04L)));
     }
 
     private Decoder() {
@@ -36,9 +36,7 @@ public record DigitalMapShop(int size,
   }
 
   public static final class Encoder {
-    public static void encode(final DigitalMapShop digitalMapShop,
-                              final FileChannel fileChannel,
-                              final int byteOffset) {
+    public static void encode(final QctWriter qctWriter, final DigitalMapShop digitalMapShop, final int byteOffset) {
       Objects.requireNonNull(digitalMapShop);
       throw new UnsupportedOperationException("Not implemented");
     }

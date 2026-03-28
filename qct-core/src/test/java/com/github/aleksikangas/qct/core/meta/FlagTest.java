@@ -6,9 +6,7 @@ package com.github.aleksikangas.qct.core.meta;
 
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -21,69 +19,64 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 class FlagTest {
+  private Path tempFile;
+  private FileChannel fileChannel;
+  private QctReader qctReader;
+  private QctWriter qctWriter;
+
+  @BeforeEach
+  void beforeEach() throws IOException {
+    tempFile = Files.createTempFile("flag", ".bin");
+    fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE);
+    qctReader = new QctReader(fileChannel);
+    qctWriter = new QctWriter(fileChannel, Flag.SIZE);
+  }
+
+  @AfterEach
+  void afterEach() throws IOException {
+    fileChannel.close();
+    Files.deleteIfExists(tempFile);
+  }
+
   @Nested
   @DisplayName("Flag Encoder & Decoder")
   class EncoderDecoderTests {
     @Test
-    void encodeAndDecodeNoFlags() throws IOException {
+    void encodeAndDecodeNoFlags() {
       final Set<Flag> flags = EnumSet.noneOf(Flag.class);
-      final Path tempFile = Files.createTempFile("flag-none", ".bin");
-      try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-
-        Flag.Encoder.encode(flags, fileChannel, 0);
-        final Set<Flag> decoded = Flag.Decoder.decode(fileChannel, 0);
-
-        assertTrue(decoded.isEmpty());
-      } finally {
-        Files.deleteIfExists(tempFile);
-      }
+      Flag.Encoder.encode(qctWriter, flags, 0);
+      final Set<Flag> decoded = Flag.Decoder.decode(qctReader, 0);
+      assertTrue(decoded.isEmpty());
     }
 
     @Test
-    void encodeAndDecodeSingleFlag() throws IOException {
+    void encodeAndDecodeSingleFlag() {
       final Set<Flag> flags = EnumSet.of(Flag.MUST_HAVE_ORIGINAL_FILE);
-      final Path tempFile = Files.createTempFile("flag-single", ".bin");
-      try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-        Flag.Encoder.encode(flags, fileChannel, 0);
-        final Set<Flag> decoded = Flag.Decoder.decode(fileChannel, 0);
+      Flag.Encoder.encode(qctWriter, flags, 0);
+      final Set<Flag> decoded = Flag.Decoder.decode(qctReader, 0);
 
-        assertEquals(1, decoded.size());
-        assertTrue(decoded.contains(Flag.MUST_HAVE_ORIGINAL_FILE));
-        assertFalse(decoded.contains(Flag.ALLOW_CALIBRATION));
-      } finally {
-        Files.deleteIfExists(tempFile);
-      }
+      assertEquals(1, decoded.size());
+      assertTrue(decoded.contains(Flag.MUST_HAVE_ORIGINAL_FILE));
+      assertFalse(decoded.contains(Flag.ALLOW_CALIBRATION));
     }
 
     @Test
-    void encodeAndDecodeBothFlags() throws IOException {
+    void encodeAndDecodeBothFlags() {
       final Set<Flag> flags = EnumSet.of(Flag.MUST_HAVE_ORIGINAL_FILE, Flag.ALLOW_CALIBRATION);
-      final Path tempFile = Files.createTempFile("flag-both", ".bin");
-      try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-        Flag.Encoder.encode(flags, fileChannel, 0);
-        final Set<Flag> decoded = Flag.Decoder.decode(fileChannel, 0);
-
-        assertEquals(2, decoded.size());
-        assertTrue(decoded.contains(Flag.MUST_HAVE_ORIGINAL_FILE));
-        assertTrue(decoded.contains(Flag.ALLOW_CALIBRATION));
-      } finally {
-        Files.deleteIfExists(tempFile);
-      }
+      Flag.Encoder.encode(qctWriter, flags, 0);
+      final Set<Flag> decoded = Flag.Decoder.decode(qctReader, 0);
+      assertEquals(2, decoded.size());
+      assertTrue(decoded.contains(Flag.MUST_HAVE_ORIGINAL_FILE));
+      assertTrue(decoded.contains(Flag.ALLOW_CALIBRATION));
     }
 
     @Test
-    void encodeAndDecodeLargeOffset() throws IOException {
+    void encodeAndDecodeLargeOffset() {
       final Set<Flag> flags = EnumSet.of(Flag.ALLOW_CALIBRATION);
-      final Path tempFile = Files.createTempFile("flag-offset", ".bin");
-      try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-        final int offset = 1024 * 1024; // 1MB offset
-        Flag.Encoder.encode(flags, fileChannel, offset);
-        final Set<Flag> decoded = Flag.Decoder.decode(fileChannel, offset);
-
-        assertEquals(EnumSet.of(Flag.ALLOW_CALIBRATION), decoded);
-      } finally {
-        Files.deleteIfExists(tempFile);
-      }
+      final int offset = 1024 * 1024; // 1MB offset
+      Flag.Encoder.encode(qctWriter, flags, offset);
+      final Set<Flag> decoded = Flag.Decoder.decode(qctReader, offset);
+      assertEquals(EnumSet.of(Flag.ALLOW_CALIBRATION), decoded);
     }
   }
 
@@ -92,46 +85,25 @@ class FlagTest {
   class DecoderTests {
 
     @Test
-    void decodeOnlyMustHaveOriginalFile() throws IOException {
-      final Path tempFile = Files.createTempFile("flag-decode-must", ".bin");
-      try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-        QctWriter.writeInt(fileChannel, 0, 1); // bit 0 set
-
-        final Set<Flag> decoded = Flag.Decoder.decode(fileChannel, 0);
-
-        assertEquals(EnumSet.of(Flag.MUST_HAVE_ORIGINAL_FILE), decoded);
-      } finally {
-        Files.deleteIfExists(tempFile);
-      }
+    void decodeOnlyMustHaveOriginalFile() {
+      qctWriter.writeInt(0, 1); // bit 0 set
+      final Set<Flag> decoded = Flag.Decoder.decode(qctReader, 0);
+      assertEquals(EnumSet.of(Flag.MUST_HAVE_ORIGINAL_FILE), decoded);
     }
 
     @Test
-    void decodeOnlyAllowCalibration() throws IOException {
-      final Path tempFile = Files.createTempFile("flag-decode-allow", ".bin");
-      try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-        QctWriter.writeInt(fileChannel, 0, 2); // bit 1 set
-
-        final Set<Flag> decoded = Flag.Decoder.decode(fileChannel, 0);
-
-        assertEquals(EnumSet.of(Flag.ALLOW_CALIBRATION), decoded);
-      } finally {
-        Files.deleteIfExists(tempFile);
-      }
+    void decodeOnlyAllowCalibration() {
+      qctWriter.writeInt(0, 2); // bit 1 set
+      final Set<Flag> decoded = Flag.Decoder.decode(qctReader, 0);
+      assertEquals(EnumSet.of(Flag.ALLOW_CALIBRATION), decoded);
     }
 
     @Test
-    void decodeUnknownBitsAreIgnored() throws IOException {
-      final Path tempFile = Files.createTempFile("flag-unknown-bits", ".bin");
-      try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-        QctWriter.writeInt(fileChannel, 0, 0b1111_1111); // all bits set
-
-        final Set<Flag> decoded = Flag.Decoder.decode(fileChannel, 0);
-
-        assertTrue(decoded.contains(Flag.MUST_HAVE_ORIGINAL_FILE));
-        assertTrue(decoded.contains(Flag.ALLOW_CALIBRATION));
-      } finally {
-        Files.deleteIfExists(tempFile);
-      }
+    void decodeUnknownBitsAreIgnored() {
+      qctWriter.writeInt(0, 0b1111_1111); // all bits set
+      final Set<Flag> decoded = Flag.Decoder.decode(qctReader, 0);
+      assertTrue(decoded.contains(Flag.MUST_HAVE_ORIGINAL_FILE));
+      assertTrue(decoded.contains(Flag.ALLOW_CALIBRATION));
     }
   }
 
@@ -139,32 +111,20 @@ class FlagTest {
   @DisplayName("Encoder")
   class EncoderTests {
     @Test
-    void encodeEmptySetWritesZero() throws IOException {
+    void encodeEmptySetWritesZero() {
       final Set<Flag> flags = EnumSet.noneOf(Flag.class);
-      final Path tempFile = Files.createTempFile("flag-empty-encode", ".bin");
-      try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-        Flag.Encoder.encode(flags, fileChannel, 0);
-
-        final int rawValue = QctReader.readInt(fileChannel, 0);
-        assertEquals(0, rawValue);
-      } finally {
-        Files.deleteIfExists(tempFile);
-      }
+      Flag.Encoder.encode(qctWriter, flags, 0);
+      final int rawValue = qctReader.readInt(0);
+      assertEquals(0, rawValue);
     }
   }
 
   @Test
-  void roundTripAllCombinations() throws IOException {
+  void roundTripAllCombinations() {
     final Set<Flag> original = EnumSet.of(Flag.MUST_HAVE_ORIGINAL_FILE, Flag.ALLOW_CALIBRATION);
     final int byteOffset = 0x40;
-    final Path tempFile = Files.createTempFile("flag-round-trip", ".bin");
-    try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-      Flag.Encoder.encode(original, fileChannel, byteOffset);
-      final Set<Flag> decoded = Flag.Decoder.decode(fileChannel, byteOffset);
-
-      assertEquals(original, decoded);
-    } finally {
-      Files.deleteIfExists(tempFile);
-    }
+    Flag.Encoder.encode(qctWriter, original, byteOffset);
+    final Set<Flag> decoded = Flag.Decoder.decode(qctReader, byteOffset);
+    assertEquals(original, decoded);
   }
 }

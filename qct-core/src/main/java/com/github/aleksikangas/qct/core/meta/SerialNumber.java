@@ -7,9 +7,9 @@ package com.github.aleksikangas.qct.core.meta;
 
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
+import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
-import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -23,8 +23,11 @@ import java.util.Objects;
  * </pre>
  */
 public record SerialNumber(int[] bytes) {
+  public static final int SIZE = 32;
+
   public SerialNumber {
     Objects.requireNonNull(bytes);
+    Preconditions.checkState(bytes.length == SIZE);
   }
 
   @Override
@@ -46,8 +49,8 @@ public record SerialNumber(int[] bytes) {
   }
 
   public static final class Decoder {
-    public static SerialNumber decode(final FileChannel fileChannel, final int byteOffset) {
-      return new SerialNumber(QctReader.readBytes(fileChannel, byteOffset, 32));
+    public static SerialNumber decode(final QctReader qctReader, final int byteOffset) {
+      return new SerialNumber(qctReader.readBytes(byteOffset, SIZE));
     }
 
     private Decoder() {
@@ -55,9 +58,9 @@ public record SerialNumber(int[] bytes) {
   }
 
   public static final class Encoder {
-    public static void encode(final SerialNumber serialNumber, final FileChannel fileChannel, final int byteOffset) {
+    public static void encode(final QctWriter qctWriter, final SerialNumber serialNumber, final int byteOffset) {
       Objects.requireNonNull(serialNumber);
-      QctWriter.writeBytes(fileChannel, byteOffset, serialNumber.bytes);
+      qctWriter.writeBytes(byteOffset, serialNumber.bytes);
     }
 
     private Encoder() {

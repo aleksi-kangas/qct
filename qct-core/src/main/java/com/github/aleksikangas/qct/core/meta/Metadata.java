@@ -5,8 +5,8 @@
 package com.github.aleksikangas.qct.core.meta;
 
 import com.github.aleksikangas.qct.core.utils.QctReader;
+import com.github.aleksikangas.qct.core.utils.QctWriter;
 
-import java.nio.channels.FileChannel;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Set;
@@ -103,33 +103,31 @@ public record Metadata(MagicNumber magicNumber,
   }
 
   public static final class Decoder {
-    public static Metadata decode(final FileChannel fileChannel) {
-      return new Metadata(MagicNumber.Decoder.decode(fileChannel, Metadata.BYTE_OFFSET),
-                          FileFormatVersion.Decoder.decode(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x04L)),
-                          QctReader.readInt(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x08L)),
-                          QctReader.readInt(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x0CL)),
-                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x10L)),
-                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x14L)),
-                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x18L)),
-                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x1CL)),
-                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x20L)),
-                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x24L)),
-                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x28L)),
-                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x2CL)),
-                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x30L)),
-                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x34L)),
-                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x38L)),
-                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x3CL)),
-                          Flag.Decoder.decode(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x40L)),
-                          QctReader.readStringFromPointer(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x44L)),
-                          QctReader.readInt(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x48L)),
-                          Instant.ofEpochSecond(QctReader.readInt(fileChannel,
-                                                                  Math.toIntExact(Metadata.BYTE_OFFSET + 0x4CL))),
-                          ExtendedData.Decoder.decode(fileChannel,
-                                                      QctReader.readPointer(fileChannel,
-                                                                            Math.toIntExact(Metadata.BYTE_OFFSET +
+    public static Metadata decode(final QctReader qctReader) {
+      return new Metadata(MagicNumber.Decoder.decode(qctReader, Metadata.BYTE_OFFSET),
+                          FileFormatVersion.Decoder.decode(qctReader, Math.toIntExact(Metadata.BYTE_OFFSET + 0x04L)),
+                          qctReader.readInt(Math.toIntExact(Metadata.BYTE_OFFSET + 0x08L)),
+                          qctReader.readInt(Math.toIntExact(Metadata.BYTE_OFFSET + 0x0CL)),
+                          qctReader.readStringFromPointer(Math.toIntExact(Metadata.BYTE_OFFSET + 0x10L)),
+                          qctReader.readStringFromPointer(Math.toIntExact(Metadata.BYTE_OFFSET + 0x14L)),
+                          qctReader.readStringFromPointer(Math.toIntExact(Metadata.BYTE_OFFSET + 0x18L)),
+                          qctReader.readStringFromPointer(Math.toIntExact(Metadata.BYTE_OFFSET + 0x1CL)),
+                          qctReader.readStringFromPointer(Math.toIntExact(Metadata.BYTE_OFFSET + 0x20L)),
+                          qctReader.readStringFromPointer(Math.toIntExact(Metadata.BYTE_OFFSET + 0x24L)),
+                          qctReader.readStringFromPointer(Math.toIntExact(Metadata.BYTE_OFFSET + 0x28L)),
+                          qctReader.readStringFromPointer(Math.toIntExact(Metadata.BYTE_OFFSET + 0x2CL)),
+                          qctReader.readStringFromPointer(Math.toIntExact(Metadata.BYTE_OFFSET + 0x30L)),
+                          qctReader.readStringFromPointer(Math.toIntExact(Metadata.BYTE_OFFSET + 0x34L)),
+                          qctReader.readStringFromPointer(Math.toIntExact(Metadata.BYTE_OFFSET + 0x38L)),
+                          qctReader.readStringFromPointer(Math.toIntExact(Metadata.BYTE_OFFSET + 0x3CL)),
+                          Flag.Decoder.decode(qctReader, Math.toIntExact(Metadata.BYTE_OFFSET + 0x40L)),
+                          qctReader.readStringFromPointer(Math.toIntExact(Metadata.BYTE_OFFSET + 0x44L)),
+                          qctReader.readInt(Math.toIntExact(Metadata.BYTE_OFFSET + 0x48L)),
+                          Instant.ofEpochSecond(qctReader.readInt(Math.toIntExact(Metadata.BYTE_OFFSET + 0x4CL))),
+                          ExtendedData.Decoder.decode(qctReader,
+                                                      qctReader.readPointer(Math.toIntExact(Metadata.BYTE_OFFSET +
                                                                                             0x54L))),
-                          MapOutline.Decoder.decode(fileChannel, Math.toIntExact(Metadata.BYTE_OFFSET + 0x58L)));
+                          MapOutline.Decoder.decode(qctReader, Math.toIntExact(Metadata.BYTE_OFFSET + 0x58L)));
     }
 
     private Decoder() {
@@ -138,7 +136,7 @@ public record Metadata(MagicNumber magicNumber,
   }
 
   public static final class Encoder {
-    public static void encode(final Metadata metadata, final FileChannel fileChannel) {
+    public static void encode(final QctWriter qctWriter, final Metadata metadata) {
       Objects.requireNonNull(metadata);
       throw new UnsupportedOperationException("Not implemented");
     }

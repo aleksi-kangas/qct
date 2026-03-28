@@ -4,10 +4,9 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
+import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -18,6 +17,25 @@ import java.nio.file.StandardOpenOption;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MapOutlineTest {
+  private Path tempFile;
+  private FileChannel fileChannel;
+  private QctReader qctReader;
+  private QctWriter qctWriter;
+
+  @BeforeEach
+  void beforeEach() throws IOException {
+    tempFile = Files.createTempFile("file-format-version", ".bin");
+    fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE);
+    qctReader = new QctReader(fileChannel);
+    qctWriter = new QctWriter(fileChannel, 1024);  // Arbitrarily large size
+  }
+
+  @AfterEach
+  void afterEach() throws IOException {
+    fileChannel.close();
+    Files.deleteIfExists(tempFile);
+  }
+
   @Nested
   @DisplayName("MapOutline")
   class RecordTests {
@@ -72,72 +90,56 @@ class MapOutlineTest {
   @DisplayName("Decoder")
   class DecoderTests {
     @Test
-    void decode() throws IOException {
+    void decode() {
       final MapOutline.Point[] expectedPoints = { new MapOutline.Point(60.1699, 24.9384),
                                                   new MapOutline.Point(61.4978, 23.7608),
                                                   new MapOutline.Point(60.4518, 25.1214) };
+      qctWriter.writeInt(0, expectedPoints.length);
+      qctWriter.writePointer(4, 16);
 
-      final Path tempFile = Files.createTempFile("map-outline-decode", ".bin");
-      try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-        QctWriter.writeInt(fileChannel, 0, expectedPoints.length);
-        QctWriter.writePointer(fileChannel, 4, 16);
+      final int arrayOffset = 16;
+      for (int i = 0; i < expectedPoints.length; ++i) {
+        final int pointOffset = arrayOffset + i * 16;
+        qctWriter.writeDouble(pointOffset, expectedPoints[i].latitude());
+        qctWriter.writeDouble(pointOffset + 8, expectedPoints[i].longitude());
+      }
 
-        final int arrayOffset = 16;
-        for (int i = 0; i < expectedPoints.length; ++i) {
-          final int pointOffset = arrayOffset + i * 16;
-          QctWriter.writeDouble(fileChannel, pointOffset, expectedPoints[i].latitude());
-          QctWriter.writeDouble(fileChannel, pointOffset + 8, expectedPoints[i].longitude());
-        }
+      final MapOutline mapOutline = MapOutline.Decoder.decode(qctReader, 0);
 
-        final MapOutline mapOutline = MapOutline.Decoder.decode(fileChannel, 0);
-
-        assertEquals(expectedPoints.length, mapOutline.points().length);
-        for (int i = 0; i < expectedPoints.length; ++i) {
-          assertEquals(expectedPoints[i].latitude(), mapOutline.points()[i].latitude(), 1e-10);
-          assertEquals(expectedPoints[i].longitude(), mapOutline.points()[i].longitude(), 1e-10);
-        }
-      } finally {
-        Files.deleteIfExists(tempFile);
+      assertEquals(expectedPoints.length, mapOutline.points().length);
+      for (int i = 0; i < expectedPoints.length; ++i) {
+        assertEquals(expectedPoints[i].latitude(), mapOutline.points()[i].latitude(), 1e-10);
+        assertEquals(expectedPoints[i].longitude(), mapOutline.points()[i].longitude(), 1e-10);
       }
     }
 
     @Test
-    void decodeLargeOffset() throws IOException {
+    void decodeLargeOffset() {
       final MapOutline.Point[] points = { new MapOutline.Point(65.0, 25.0), new MapOutline.Point(66.0, 26.0) };
-      final Path tempFile = Files.createTempFile("map-outline-decode-offset", ".bin");
-      try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-        final int baseOffset = 1024 * 1024; // 1MB offset
-        QctWriter.writeInt(fileChannel, baseOffset, points.length);
-        QctWriter.writePointer(fileChannel, baseOffset + 4, baseOffset + 16);
+      final int baseOffset = 1024 * 1024; // 1MB offset
+      qctWriter.writeInt(baseOffset, points.length);
+      qctWriter.writePointer(baseOffset + 4, baseOffset + 16);
 
-        final int arrayOffset = baseOffset + 16;
-        for (int i = 0; i < points.length; ++i) {
-          final int pointOffset = arrayOffset + i * 16;
-          QctWriter.writeDouble(fileChannel, pointOffset, points[i].latitude());
-          QctWriter.writeDouble(fileChannel, pointOffset + 8, points[i].longitude());
-        }
-
-        final MapOutline mapOutline = MapOutline.Decoder.decode(fileChannel, baseOffset);
-
-        assertEquals(points.length, mapOutline.points().length);
-      } finally {
-        Files.deleteIfExists(tempFile);
+      final int arrayOffset = baseOffset + 16;
+      for (int i = 0; i < points.length; ++i) {
+        final int pointOffset = arrayOffset + i * 16;
+        qctWriter.writeDouble(pointOffset, points[i].latitude());
+        qctWriter.writeDouble(pointOffset + 8, points[i].longitude());
       }
+
+      final MapOutline mapOutline = MapOutline.Decoder.decode(qctReader, baseOffset);
+
+      assertEquals(points.length, mapOutline.points().length);
     }
 
     @Test
-    void decodeEmpty() throws IOException {
-      final Path tempFile = Files.createTempFile("map-outline-empty", ".bin");
-      try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-        QctWriter.writeInt(fileChannel, 0, 0);
-        QctWriter.writePointer(fileChannel, 4, 16);
+    void decodeEmpty() {
+      qctWriter.writeInt(0, 0);
+      qctWriter.writePointer(4, 16);
 
-        final MapOutline mapOutline = MapOutline.Decoder.decode(fileChannel, 0);
+      final MapOutline mapOutline = MapOutline.Decoder.decode(qctReader, 0);
 
-        assertEquals(0, mapOutline.points().length);
-      } finally {
-        Files.deleteIfExists(tempFile);
-      }
+      assertEquals(0, mapOutline.points().length);
     }
   }
 
@@ -145,54 +147,33 @@ class MapOutlineTest {
   @DisplayName("Encoder")
   class EncoderTests {
     @Test
-    void encode() throws IOException {
+    void encode() {
       final MapOutline.Point[] points = { new MapOutline.Point(60.1699, 24.9384),
                                           new MapOutline.Point(61.4978, 23.7608) };
       final var mapOutline = new MapOutline(points);
-      final Path tempFile = Files.createTempFile("map-outline-encode", ".bin");
-      try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-
-        MapOutline.Encoder.encode(mapOutline, fileChannel, 0);
-
-        final MapOutline decoded = MapOutline.Decoder.decode(fileChannel, 0);
-
-        assertEquals(mapOutline, decoded);
-      } finally {
-        Files.deleteIfExists(tempFile);
-      }
+      MapOutline.Encoder.encode(qctWriter, mapOutline, 0);
+      final MapOutline decoded = MapOutline.Decoder.decode(qctReader, 0);
+      assertEquals(mapOutline, decoded);
     }
 
     @Test
-    void encodeEmpty() throws IOException {
+    void encodeEmpty() {
       final var mapOutline = new MapOutline(new MapOutline.Point[0]);
-      final Path tempFile = Files.createTempFile("map-outline-encode-empty", ".bin");
-      try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-        MapOutline.Encoder.encode(mapOutline, fileChannel, 0);
-
-        final MapOutline decoded = MapOutline.Decoder.decode(fileChannel, 0);
-
-        assertEquals(0, decoded.points().length);
-      } finally {
-        Files.deleteIfExists(tempFile);
-      }
+      MapOutline.Encoder.encode(qctWriter, mapOutline, 0);
+      final MapOutline decoded = MapOutline.Decoder.decode(qctReader, 0);
+      assertEquals(0, decoded.points().length);
     }
   }
 
   @Test
-  void roundTrip() throws IOException {
+  void roundTrip() {
     final int byteOffset = 512;
     final MapOutline.Point[] originalPoints = { new MapOutline.Point(59.43696, 24.75357),
                                                 new MapOutline.Point(60.16985, 24.93838),
                                                 new MapOutline.Point(61.05437, 28.18871) };
     final var mapOutline = new MapOutline(originalPoints);
-    final Path tempFile = Files.createTempFile("map-outline-round-trip", ".bin");
-    try (final var fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-      MapOutline.Encoder.encode(mapOutline, fileChannel, byteOffset);
-      final MapOutline decoded = MapOutline.Decoder.decode(fileChannel, byteOffset);
-
-      assertEquals(mapOutline, decoded);
-    } finally {
-      Files.deleteIfExists(tempFile);
-    }
+    MapOutline.Encoder.encode(qctWriter, mapOutline, byteOffset);
+    final MapOutline decoded = MapOutline.Decoder.decode(qctReader, byteOffset);
+    assertEquals(mapOutline, decoded);
   }
 }

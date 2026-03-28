@@ -6,6 +6,8 @@ package com.github.aleksikangas.qct.core;
 
 import com.github.aleksikangas.qct.core.exception.QctRuntimeException;
 import com.github.aleksikangas.qct.core.meta.Metadata;
+import com.github.aleksikangas.qct.core.utils.QctReader;
+import com.github.aleksikangas.qct.core.utils.QctWriter;
 
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -35,8 +37,8 @@ public record QctFile(Metadata metadata) {
   }
 
   public static final class Decoder {
-    public static QctFile decode(final FileChannel fileChannel) {
-      return new QctFile(Metadata.Decoder.decode(fileChannel));
+    public static QctFile decode(final QctReader qctReader) {
+      return new QctFile(Metadata.Decoder.decode(qctReader));
     }
 
     private Decoder() {
@@ -44,7 +46,7 @@ public record QctFile(Metadata metadata) {
   }
 
   public static final class Encoder {
-    public static void encode(final QctFile qctFile, final FileChannel fileChannel) {
+    public static void encode(final QctWriter qctWriter, final QctFile qctFile) {
       Objects.requireNonNull(qctFile);
       throw new UnsupportedOperationException("Not implemented");
     }
@@ -56,7 +58,8 @@ public record QctFile(Metadata metadata) {
   static void main(final String[] args) {
     final Path path = Paths.get(args[0]);
     try (final var fileChannel = FileChannel.open(path, Set.of(StandardOpenOption.READ))) {
-      final QctFile qctFile = QctFile.Decoder.decode(fileChannel);
+      final var qctReader = new QctReader(fileChannel);
+      final QctFile qctFile = QctFile.Decoder.decode(qctReader);
       System.out.println(qctFile);
     } catch (final IOException e) {
       throw new QctRuntimeException(e);

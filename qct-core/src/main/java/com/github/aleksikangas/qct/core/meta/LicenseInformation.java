@@ -5,8 +5,8 @@
 package com.github.aleksikangas.qct.core.meta;
 
 import com.github.aleksikangas.qct.core.utils.QctReader;
+import com.github.aleksikangas.qct.core.utils.QctWriter;
 
-import java.nio.channels.FileChannel;
 import java.util.Objects;
 
 /**
@@ -35,12 +35,11 @@ public record LicenseInformation(int identifier,
   }
 
   public static final class Decoder {
-    public static LicenseInformation decode(final FileChannel fileChannel, final int byteOffset) {
-      return new LicenseInformation(QctReader.readInt(fileChannel, byteOffset),
-                                    QctReader.readString(fileChannel, Math.toIntExact(byteOffset + 0x0CL)),
-                                    SerialNumber.Decoder.decode(fileChannel,
-                                                                QctReader.readPointer(fileChannel,
-                                                                                      Math.toIntExact(byteOffset +
+    public static LicenseInformation decode(final QctReader qctReader, final int byteOffset) {
+      return new LicenseInformation(qctReader.readInt(byteOffset),
+                                    qctReader.readString(Math.toIntExact(byteOffset + 0x0CL)),
+                                    SerialNumber.Decoder.decode(qctReader,
+                                                                qctReader.readPointer(Math.toIntExact(byteOffset +
                                                                                                       0x10L))));
     }
 
@@ -49,8 +48,8 @@ public record LicenseInformation(int identifier,
   }
 
   public static final class Encoder {
-    public static void encode(final LicenseInformation licenseInformation,
-                              final FileChannel fileChannel,
+    public static void encode(final QctWriter qctWriter,
+                              final LicenseInformation licenseInformation,
                               final int byteOffset) {
       Objects.requireNonNull(licenseInformation);
       throw new UnsupportedOperationException("Not implemented");

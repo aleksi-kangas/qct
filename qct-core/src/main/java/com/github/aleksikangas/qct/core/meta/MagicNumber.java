@@ -7,7 +7,6 @@ package com.github.aleksikangas.qct.core.meta;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 
-import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -28,6 +27,8 @@ public enum MagicNumber {
 
   private final int value;
 
+  public static final int SIZE = 0x04;
+
   MagicNumber(final int value) {
     this.value = value;
   }
@@ -45,8 +46,8 @@ public enum MagicNumber {
   }
 
   public static final class Decoder {
-    public static MagicNumber decode(final FileChannel fileChannel, final int byteOffset) {
-      final int value = QctReader.readInt(fileChannel, byteOffset);
+    public static MagicNumber decode(final QctReader qctReader, final int byteOffset) {
+      final int value = qctReader.readInt(byteOffset);
       return Arrays.stream(MagicNumber.values())
                    .filter(f -> f.value == value)
                    .findFirst()
@@ -58,9 +59,9 @@ public enum MagicNumber {
   }
 
   public static final class Encoder {
-    public static void encode(final MagicNumber magicNumber, final FileChannel fileChannel, final int byteOffset) {
+    public static void encode(final QctWriter qctWriter, final MagicNumber magicNumber, final int byteOffset) {
       Objects.requireNonNull(magicNumber);
-      QctWriter.writeInt(fileChannel, byteOffset, magicNumber.value);
+      qctWriter.writeInt(byteOffset, magicNumber.value);
     }
 
     private Encoder() {

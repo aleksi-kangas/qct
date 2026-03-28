@@ -5,8 +5,8 @@
 package com.github.aleksikangas.qct.core.meta;
 
 import com.github.aleksikangas.qct.core.utils.QctReader;
+import com.github.aleksikangas.qct.core.utils.QctWriter;
 
-import java.nio.channels.FileChannel;
 import java.util.Objects;
 
 /**
@@ -41,20 +41,17 @@ public record ExtendedData(String mapType,
   }
 
   public static final class Decoder {
-    public static ExtendedData decode(final FileChannel fileChannel, final int byteOffset) {
-      return new ExtendedData(QctReader.readStringFromPointer(fileChannel, byteOffset),
-                              DatumShift.Decoder.decode(fileChannel,
-                                                        QctReader.readPointer(fileChannel,
-                                                                              Math.toIntExact(byteOffset + 0x04L))),
-                              QctReader.readStringFromPointer(fileChannel, Math.toIntExact(byteOffset + 0x08L)),
-                              LicenseInformation.Decoder.decode(fileChannel,
-                                                                QctReader.readPointer(fileChannel,
-                                                                                      Math.toIntExact(byteOffset +
+    public static ExtendedData decode(final QctReader qctReader, final int byteOffset) {
+      return new ExtendedData(qctReader.readStringFromPointer(byteOffset),
+                              DatumShift.Decoder.decode(qctReader,
+                                                        qctReader.readPointer(Math.toIntExact(byteOffset + 0x04L))),
+                              qctReader.readStringFromPointer(Math.toIntExact(byteOffset + 0x08L)),
+                              LicenseInformation.Decoder.decode(qctReader,
+                                                                qctReader.readPointer(Math.toIntExact(byteOffset +
                                                                                                       0x14L))),
-                              QctReader.readStringFromPointer(fileChannel, Math.toIntExact(byteOffset + 0x18L)),
-                              DigitalMapShop.Decoder.decode(fileChannel,
-                                                            QctReader.readPointer(fileChannel,
-                                                                                  Math.toIntExact(byteOffset +
+                              qctReader.readStringFromPointer(Math.toIntExact(byteOffset + 0x18L)),
+                              DigitalMapShop.Decoder.decode(qctReader,
+                                                            qctReader.readPointer(Math.toIntExact(byteOffset +
                                                                                                   0x1CL))));
     }
 
@@ -63,7 +60,7 @@ public record ExtendedData(String mapType,
   }
 
   public static final class Encoder {
-    public static void encode(final ExtendedData extendedData, final FileChannel fileChannel, final long byteOffset) {
+    public static void encode(final QctWriter qctWriter, final ExtendedData extendedData, final int byteOffset) {
       Objects.requireNonNull(extendedData);
       throw new UnsupportedOperationException("Not implemented");
     }

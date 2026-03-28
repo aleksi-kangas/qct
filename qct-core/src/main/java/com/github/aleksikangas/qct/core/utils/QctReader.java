@@ -10,31 +10,36 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
+import java.util.Objects;
 
 /**
  * A utility class for reading from QCT file.
  */
 public final class QctReader {
+  private final FileChannel fileChannel;
+
+  public QctReader(final FileChannel fileChannel) {
+    this.fileChannel = Objects.requireNonNull(fileChannel);
+  }
+
   /**
    * Reads a single unsigned byte from the given byte offset.
    *
-   * @param fileChannel to read from
-   * @param byteOffset  the byte offset of the byte
+   * @param byteOffset the byte offset of the byte
    * @return read byte
    */
-  public static int readByte(final FileChannel fileChannel, final int byteOffset) {
-    return readBytes(fileChannel, byteOffset, 1)[0];
+  public int readByte(final int byteOffset) {
+    return readBytes(byteOffset, 1)[0];
   }
 
   /**
    * Reads multiple unsigned bytes from the given byte offset.
    *
-   * @param fileChannel to read from
-   * @param byteOffset  the byte offset of the first byte
-   * @param count       bytes to read
+   * @param byteOffset the byte offset of the first byte
+   * @param count      bytes to read
    * @return read bytes
    */
-  public static int[] readBytes(final FileChannel fileChannel, final int byteOffset, final int count) {
+  public int[] readBytes(final int byteOffset, final int count) {
     final ByteBuffer byteBuffer = ByteBuffer.allocate(count);
     try {
       if (fileChannel.read(byteBuffer, byteOffset) == count) {
@@ -55,12 +60,11 @@ public final class QctReader {
   /**
    * Reads multiple unsigned bytes from the given byte offset, until count or EOF.
    *
-   * @param fileChannel to read from
-   * @param byteOffset  the byte offset of the first byte
-   * @param count       bytes to read
+   * @param byteOffset the byte offset of the first byte
+   * @param count      bytes to read
    * @return read bytes, until count or EOF
    */
-  public static int[] readBytesSafe(final FileChannel fileChannel, final int byteOffset, final int count) {
+  public int[] readBytesSafe(final int byteOffset, final int count) {
     final ByteBuffer byteBuffer = ByteBuffer.allocate(count);
     try {
       final int readCount = fileChannel.read(byteBuffer, byteOffset);
@@ -78,11 +82,10 @@ public final class QctReader {
   /**
    * Reads a double (8 byte IEEE-754) from the given byte offset.
    *
-   * @param fileChannel to read from
-   * @param byteOffset  the byte offset of the double
+   * @param byteOffset the byte offset of the double
    * @return read double
    */
-  public static double readDouble(final FileChannel fileChannel, final int byteOffset) {
+  public double readDouble(final int byteOffset) {
     final ByteBuffer byteBuffer = ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN);
     try {
       if (fileChannel.read(byteBuffer, byteOffset) == 8) {
@@ -98,15 +101,14 @@ public final class QctReader {
   /**
    * Reads multiple doubles (8 byte IEEE-754) from the given byte offset.
    *
-   * @param fileChannel to read from
-   * @param byteOffset  byte offset of the first double
-   * @param count       doubles to read
+   * @param byteOffset byte offset of the first double
+   * @param count      doubles to read
    * @return read doubles
    */
-  public static double[] readDoubles(final FileChannel fileChannel, final int byteOffset, final int count) {
+  public double[] readDoubles(final int byteOffset, final int count) {
     final double[] doubles = new double[count];
     for (int i = 0; i < count; ++i) {
-      doubles[i] = QctReader.readDouble(fileChannel, byteOffset + i * 0x08);
+      doubles[i] = readDouble(byteOffset + i * 0x08);
     }
     return doubles;
   }
@@ -114,11 +116,10 @@ public final class QctReader {
   /**
    * Reads an integer (4-byte) stored as little-endian from the given byte offset.
    *
-   * @param fileChannel to read from
-   * @param byteOffset  the byte offset of the integer
+   * @param byteOffset the byte offset of the integer
    * @return read integer
    */
-  public static int readInt(final FileChannel fileChannel, final int byteOffset) {
+  public int readInt(final int byteOffset) {
     final ByteBuffer byteBuffer = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN);
     try {
       if (fileChannel.read(byteBuffer, byteOffset) == 4) {
@@ -136,23 +137,21 @@ public final class QctReader {
    * Reads an integer (4-byte) pointer stored as little-endian from the given byte offset. Pointers are essentially byte
    * offsets within the file.
    *
-   * @param fileChannel to read from
-   * @param byteOffset  the byte offset of the pointer
+   * @param byteOffset the byte offset of the pointer
    * @return read pointer
-   * @see #readInt(FileChannel, int)
+   * @see #readInt(int)
    */
-  public static int readPointer(final FileChannel fileChannel, final int byteOffset) {
-    return readInt(fileChannel, byteOffset);
+  public int readPointer(final int byteOffset) {
+    return readInt(byteOffset);
   }
 
   /**
    * Reads a NULL-terminated string from the given byte offset.
    *
-   * @param fileChannel to read from
-   * @param byteOffset  byte offset of the string
+   * @param byteOffset byte offset of the string
    * @return read string
    */
-  public static String readString(final FileChannel fileChannel, final int byteOffset) {
+  public String readString(final int byteOffset) {
     final ByteBuffer byteBuffer = ByteBuffer.allocate(1);
     final StringBuilder stringBuilder = new StringBuilder();
     try {
@@ -175,18 +174,14 @@ public final class QctReader {
    * Reads a NULL-terminated string by first reading the string pointer from the given byte offset, and then reading the
    * string from the pointed byte offset.
    *
-   * @param fileChannel       to read from
    * @param pointerByteOffset byte offset of the string pointer
    * @return read string
    */
-  public static String readStringFromPointer(final FileChannel fileChannel, final int pointerByteOffset) {
-    final int byteOffset = readPointer(fileChannel, pointerByteOffset);
+  public String readStringFromPointer(final int pointerByteOffset) {
+    final int byteOffset = readPointer(pointerByteOffset);
     if (byteOffset != 0) {
-      return readString(fileChannel, byteOffset);
+      return readString(byteOffset);
     }
     return "";
-  }
-
-  private QctReader() {
   }
 }

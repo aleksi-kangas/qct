@@ -19,10 +19,12 @@ import static org.mockito.Mockito.*;
 
 final class QctReaderTest {
   private FileChannel mockFileChannel;
+  private QctReader qctReader;
 
   @BeforeEach
   void setUp() {
     mockFileChannel = mock(FileChannel.class);
+    qctReader = new QctReader(mockFileChannel);
   }
 
   @Test
@@ -35,7 +37,7 @@ final class QctReaderTest {
       return 1;
     });
 
-    final int readByte = QctReader.readByte(mockFileChannel, 0);
+    final int readByte = qctReader.readByte(0);
 
     assertEquals(expectedByte, readByte);
     verify(mockFileChannel, times(1)).read(any(ByteBuffer.class), eq(0L));
@@ -54,7 +56,7 @@ final class QctReaderTest {
       return expectedBytes.length;
     });
 
-    final int[] bytes = QctReader.readBytes(mockFileChannel, 0, expectedBytes.length);
+    final int[] bytes = qctReader.readBytes(0, expectedBytes.length);
 
     assertArrayEquals(expectedBytes, bytes);
     verify(mockFileChannel, times(1)).read(any(ByteBuffer.class), eq(0L));
@@ -74,7 +76,7 @@ final class QctReaderTest {
       return expectedBytes.length;
     });
 
-    final int[] bytes = QctReader.readBytesSafe(mockFileChannel, 0, requestedCount);
+    final int[] bytes = qctReader.readBytesSafe(0, requestedCount);
 
     assertArrayEquals(expectedBytes, bytes);
     verify(mockFileChannel, times(1)).read(any(ByteBuffer.class), eq(0L));
@@ -92,7 +94,7 @@ final class QctReaderTest {
       return 8;
     });
 
-    final double readDouble = QctReader.readDouble(mockFileChannel, 0);
+    final double readDouble = qctReader.readDouble(0);
 
     assertEquals(expectedDouble, readDouble, 0.0);
     verify(mockFileChannel, times(1)).read(any(ByteBuffer.class), eq(0L));
@@ -111,7 +113,7 @@ final class QctReaderTest {
       return 8;
     });
 
-    final double[] readDoubles = QctReader.readDoubles(mockFileChannel, 0, expectedDoubles.length);
+    final double[] readDoubles = qctReader.readDoubles(0, expectedDoubles.length);
 
     assertArrayEquals(expectedDoubles, readDoubles);
     verify(mockFileChannel, times(expectedDoubles.length)).read(any(ByteBuffer.class), anyLong());
@@ -129,7 +131,7 @@ final class QctReaderTest {
       return 4;
     });
 
-    final int readInt = QctReader.readInt(mockFileChannel, 0);
+    final int readInt = qctReader.readInt(0);
 
     assertEquals(expectedInt, readInt);
     verify(mockFileChannel, times(1)).read(any(ByteBuffer.class), eq(0L));
@@ -147,7 +149,7 @@ final class QctReaderTest {
       return 4;
     });
 
-    final int readPointer = QctReader.readPointer(mockFileChannel, 0);
+    final int readPointer = qctReader.readPointer(0);
 
     assertEquals(expectedPointer, readPointer);
     verify(mockFileChannel, times(1)).read(any(ByteBuffer.class), eq(0L));
@@ -172,7 +174,7 @@ final class QctReaderTest {
       throw new IOException();
     });
 
-    final String result = QctReader.readString(mockFileChannel, 0);
+    final String result = qctReader.readString(0);
 
     assertEquals(expectedString, result);
     verify(mockFileChannel, times(expectedString.length() + 1)).read(any(ByteBuffer.class), anyLong());
@@ -187,7 +189,7 @@ final class QctReaderTest {
       return 1;
     });
 
-    final String result = QctReader.readString(mockFileChannel, 0);
+    final String result = qctReader.readString(0);
 
     assertEquals("", result);
     verify(mockFileChannel, times(1)).read(any(ByteBuffer.class), eq(0L));
@@ -221,7 +223,7 @@ final class QctReaderTest {
       throw new IOException();
     });
 
-    final String result = QctReader.readStringFromPointer(mockFileChannel, pointerOffset);
+    final String result = qctReader.readStringFromPointer(pointerOffset);
 
     assertEquals(expectedString, result);
 
@@ -241,7 +243,7 @@ final class QctReaderTest {
       return 4;
     });
 
-    final String result = QctReader.readStringFromPointer(mockFileChannel, 0);
+    final String result = qctReader.readStringFromPointer(0);
 
     assertEquals("", result);
     verify(mockFileChannel, times(1)).read(any(ByteBuffer.class), eq(0L));
