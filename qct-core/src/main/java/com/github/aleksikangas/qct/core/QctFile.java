@@ -4,6 +4,7 @@
 
 package com.github.aleksikangas.qct.core;
 
+import com.github.aleksikangas.qct.core.color.InterpolationMatrix;
 import com.github.aleksikangas.qct.core.color.Palette;
 import com.github.aleksikangas.qct.core.exception.QctRuntimeException;
 import com.github.aleksikangas.qct.core.georef.GeoreferencingCoefficients;
@@ -35,7 +36,8 @@ import java.util.Set;
  */
 public record QctFile(Metadata metadata,
                       GeoreferencingCoefficients georeferencingCoefficients,
-                      Palette palette) {
+                      Palette palette,
+                      InterpolationMatrix interpolationMatrix) {
   public QctFile {
     Objects.requireNonNull(metadata);
     Objects.requireNonNull(georeferencingCoefficients);
@@ -50,7 +52,8 @@ public record QctFile(Metadata metadata,
     public static QctFile decode(final QctReader qctReader) {
       return new QctFile(Metadata.Decoder.decode(qctReader),
                          GeoreferencingCoefficients.Decoder.decode(qctReader),
-                         Palette.Decoder.decode(qctReader));
+                         Palette.Decoder.decode(qctReader),
+                         InterpolationMatrix.Decoder.decode(qctReader));
     }
 
     private Decoder() {
@@ -64,6 +67,7 @@ public record QctFile(Metadata metadata,
       Metadata.Encoder.encode(qctWriter, qctFile.metadata());
       GeoreferencingCoefficients.Encoder.encode(qctWriter, qctFile.georeferencingCoefficients());
       Palette.Encoder.encode(qctWriter, qctFile.palette());
+      InterpolationMatrix.Encoder.encode(qctWriter, qctFile.interpolationMatrix());
     }
 
     private Encoder() {
