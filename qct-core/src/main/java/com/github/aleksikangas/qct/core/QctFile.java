@@ -8,6 +8,7 @@ import com.github.aleksikangas.qct.core.color.InterpolationMatrix;
 import com.github.aleksikangas.qct.core.color.Palette;
 import com.github.aleksikangas.qct.core.exception.QctRuntimeException;
 import com.github.aleksikangas.qct.core.georef.GeoreferencingCoefficients;
+import com.github.aleksikangas.qct.core.image.ImageIndex;
 import com.github.aleksikangas.qct.core.meta.Metadata;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
@@ -38,7 +39,8 @@ import java.util.Set;
 public record QctFile(Metadata metadata,
                       GeoreferencingCoefficients georeferencingCoefficients,
                       Palette palette,
-                      InterpolationMatrix interpolationMatrix) {
+                      InterpolationMatrix interpolationMatrix,
+                      ImageIndex imageIndex) {
   public QctFile {
     Objects.requireNonNull(metadata);
     Objects.requireNonNull(georeferencingCoefficients);
@@ -68,8 +70,7 @@ public record QctFile(Metadata metadata,
   }
 
   public int headerSize() {
-    // TODO
-    return 0x45A0;
+    return 0x45A0 + imageIndex.size();
   }
 
   public static final class Decoder {
@@ -77,7 +78,8 @@ public record QctFile(Metadata metadata,
       return new QctFile(Metadata.Decoder.decode(qctReader),
                          GeoreferencingCoefficients.Decoder.decode(qctReader),
                          Palette.Decoder.decode(qctReader),
-                         InterpolationMatrix.Decoder.decode(qctReader));
+                         InterpolationMatrix.Decoder.decode(qctReader),
+                         ImageIndex.Decoder.decode(qctReader));
     }
 
     private Decoder() {
@@ -92,6 +94,7 @@ public record QctFile(Metadata metadata,
       GeoreferencingCoefficients.Encoder.encode(qctWriter, qctFile.georeferencingCoefficients());
       Palette.Encoder.encode(qctWriter, qctFile.palette());
       InterpolationMatrix.Encoder.encode(qctWriter, qctFile.interpolationMatrix());
+      ImageIndex.Encoder.encode(qctWriter, qctFile.imageIndex());
     }
 
     private Encoder() {
