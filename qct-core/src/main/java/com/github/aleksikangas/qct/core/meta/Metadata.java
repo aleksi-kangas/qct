@@ -7,6 +7,7 @@ package com.github.aleksikangas.qct.core.meta;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 
+import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Set;
@@ -101,6 +102,70 @@ public record Metadata(MagicNumber magicNumber,
     Objects.requireNonNull(originalFileCreationTime);
     Objects.requireNonNull(extendedData);
     Objects.requireNonNull(mapOutline);
+  }
+
+  @Nonnull
+  @Override
+  public String toString() {
+    return "{" +
+           "magicNumber=" +
+           magicNumber +
+           ", fileFormatVersion=" +
+           fileFormatVersion +
+           ", widthTiles=" +
+           widthTiles +
+           ", heightTiles=" +
+           heightTiles +
+           ", longTitle='" +
+           longTitle +
+           '\'' +
+           ", name='" +
+           name +
+           '\'' +
+           ", identifier='" +
+           identifier +
+           '\'' +
+           ", edition='" +
+           edition +
+           '\'' +
+           ", revision='" +
+           revision +
+           '\'' +
+           ", keywords='" +
+           keywords +
+           '\'' +
+           ", copyright='" +
+           copyright +
+           '\'' +
+           ", scale='" +
+           scale +
+           '\'' +
+           ", datum='" +
+           datum +
+           '\'' +
+           ", depths='" +
+           depths +
+           '\'' +
+           ", heights='" +
+           heights +
+           '\'' +
+           ", projection='" +
+           projection +
+           '\'' +
+           ", flags=" +
+           flags +
+           ", originalFileName='" +
+           originalFileName +
+           '\'' +
+           ", originalFileSize=" +
+           originalFileSize +
+           ", originalFileCreationTime=" +
+           originalFileCreationTime +
+           ", extendedData=" +
+           extendedData +
+           ", mapOutline=" +
+           mapOutline +
+           '}';
   }
 
   public static final class Decoder {

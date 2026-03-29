@@ -12,6 +12,7 @@ import com.github.aleksikangas.qct.core.meta.Metadata;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
@@ -41,6 +42,29 @@ public record QctFile(Metadata metadata,
   public QctFile {
     Objects.requireNonNull(metadata);
     Objects.requireNonNull(georeferencingCoefficients);
+  }
+
+  @Nonnull
+  @Override
+  public String toString() {
+    return "{" +
+           "\n" +
+           "Metadata: \n" +
+           "\t" +
+           metadata +
+           "\n" +
+           "GeoreferencingCoefficients: \n" +
+           georeferencingCoefficients +
+           "\n" +
+           "Palette: \n" +
+           "\t" +
+           palette +
+           "\n" +
+           "InterpolationMatrix: \n" +
+           "\t" +
+           interpolationMatrix +
+           "\n" +
+           "}";
   }
 
   public int headerSize() {
