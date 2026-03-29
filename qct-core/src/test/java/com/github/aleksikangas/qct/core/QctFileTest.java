@@ -37,6 +37,9 @@ class QctFileTest {
         final var qctReader2 = new QctReader(readChannel2);
         final QctFile decoded = QctFile.Decoder.decode(qctReader2);
         assertEquals(originalQctFile.metadata(), decoded.metadata());
+        assertEquals(originalQctFile.georeferencingCoefficients(), decoded.georeferencingCoefficients());
+        assertEquals(originalQctFile.palette(), decoded.palette());
+        assertEquals(originalQctFile.interpolationMatrix(), decoded.interpolationMatrix());
       }
       Files.deleteIfExists(tempFile);
     }

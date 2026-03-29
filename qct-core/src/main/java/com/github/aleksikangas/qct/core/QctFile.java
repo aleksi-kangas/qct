@@ -75,11 +75,12 @@ public record QctFile(Metadata metadata,
 
   public static final class Decoder {
     public static QctFile decode(final QctReader qctReader) {
-      return new QctFile(Metadata.Decoder.decode(qctReader),
+      final Metadata metadata = Metadata.Decoder.decode(qctReader);
+      return new QctFile(metadata,
                          GeoreferencingCoefficients.Decoder.decode(qctReader),
                          Palette.Decoder.decode(qctReader),
                          InterpolationMatrix.Decoder.decode(qctReader),
-                         ImageIndex.Decoder.decode(qctReader));
+                         ImageIndex.Decoder.decode(qctReader, metadata));
     }
 
     private Decoder() {
@@ -90,11 +91,11 @@ public record QctFile(Metadata metadata,
     public static void encode(final QctWriter qctWriter, final QctFile qctFile) {
       Objects.requireNonNull(qctFile);
 
-      Metadata.Encoder.encode(qctWriter, qctFile.metadata());
-      GeoreferencingCoefficients.Encoder.encode(qctWriter, qctFile.georeferencingCoefficients());
-      Palette.Encoder.encode(qctWriter, qctFile.palette());
-      InterpolationMatrix.Encoder.encode(qctWriter, qctFile.interpolationMatrix());
-      ImageIndex.Encoder.encode(qctWriter, qctFile.imageIndex());
+      Metadata.Encoder.encode(qctWriter, qctFile.metadata);
+      GeoreferencingCoefficients.Encoder.encode(qctWriter, qctFile.georeferencingCoefficients);
+      Palette.Encoder.encode(qctWriter, qctFile.palette);
+      InterpolationMatrix.Encoder.encode(qctWriter, qctFile.interpolationMatrix);
+      ImageIndex.Encoder.encode(qctWriter, qctFile.imageIndex, qctFile.metadata);
     }
 
     private Encoder() {

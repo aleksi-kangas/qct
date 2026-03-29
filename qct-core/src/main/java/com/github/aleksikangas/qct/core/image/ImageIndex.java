@@ -4,6 +4,7 @@
 
 package com.github.aleksikangas.qct.core.image;
 
+import com.github.aleksikangas.qct.core.image.tile.ImageTile;
 import com.github.aleksikangas.qct.core.meta.Metadata;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
@@ -87,8 +88,7 @@ public record ImageIndex(ImageTile[][] imageTiles) {
           final int imageTilePointerOffset = Math.toIntExact(ImageIndex.BYTE_OFFSET +
                                                              ((long) metadata.widthTiles() * y + x) * 0x04L);
           final int imageTilePointer = qctReader.readPointer(Math.toIntExact(imageTilePointerOffset));
-          imageTiles[y][x] = new ImageTile(ImageTile.Encoding.HUFFMAN_CODING,
-                                           new int[ImageTile.HEIGHT][ImageTile.WIDTH]);  // TODO
+          imageTiles[y][x] = ImageTile.Decoder.decode(qctReader, imageTilePointer);
         }
       }
 
@@ -100,8 +100,48 @@ public record ImageIndex(ImageTile[][] imageTiles) {
   }
 
   public static final class Encoder {
-    public static void encode(final QctWriter qctWriter, final ImageIndex imageIndex) {
-      throw new UnsupportedOperationException("Not implemented");
+    public static void encode(final QctWriter qctWriter, final ImageIndex imageIndex, final Metadata metadata) {
+      Objects.requireNonNull(imageIndex);
+      Objects.requireNonNull(metadata);
+
+      final int height = metadata.heightTiles();
+      final int width = metadata.widthTiles();
+      Preconditions.checkState(height > 0, "height must be > 0");
+      Preconditions.checkState(width > 0, "width must be > 0");
+      Preconditions.checkState(imageIndex.heightTiles() == height && imageIndex.widthTiles() == width,
+                               "ImageIndex dimensions must match Metadata");
+
+      // First, allocate space for all tile data and remember their starting offsets
+      final int[][] tileOffsets = new int[height][width];
+
+      for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+          final ImageTile tile = imageIndex.imageTile(y, x);
+          final int tileOffset = qctWriter.allocate(estimateTileSize(tile));
+          tileOffsets[y][x] = tileOffset;
+          // TODO Encode with RLE for now
+          final ImageTile rleTile = new ImageTile(ImageTile.Encoding.RUN_LENGTH_ENCODING, tile.paletteIndices());
+          ImageTile.Encoder.encode(qctWriter, rleTile, tileOffset);
+        }
+      }
+      writePointerTable(qctWriter, tileOffsets);
+    }
+
+    private static void writePointerTable(final QctWriter qctWriter, final int[][] tileOffsets) {
+      final int height = tileOffsets.length;
+      final int width = tileOffsets[0].length;
+      for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+          final int pointerOffset = Math.toIntExact(ImageIndex.BYTE_OFFSET + ((long) width * y + x) * 0x04L);
+          qctWriter.writePointer(pointerOffset, tileOffsets[y][x]);
+        }
+      }
+    }
+
+    @Deprecated(forRemoval = true)
+    private static int estimateTileSize(final ImageTile tile) {
+      // Sub-palette (1 byte size + up to 256 indices) + worst-case RLE data (64*64 bytes)
+      return 1 + 256 + ImageTile.PIXEL_COUNT;
     }
 
     private Encoder() {
