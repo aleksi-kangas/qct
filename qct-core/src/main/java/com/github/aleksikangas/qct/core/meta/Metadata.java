@@ -79,7 +79,7 @@ public record Metadata(MagicNumber magicNumber,
                        ExtendedData extendedData,
                        MapOutline mapOutline) {
   public static final int BYTE_OFFSET = 0x0000;
-  public static final int SIZE = 0x24 * 0x04;
+  public static final int HEADER_SIZE = 24 * 0x04;
 
   public Metadata {
     Objects.requireNonNull(magicNumber);

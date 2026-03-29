@@ -27,7 +27,7 @@ class LicenseInformationTest {
     tempFile = Files.createTempFile("license-info", ".bin");
     fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE);
     qctReader = new QctReader(fileChannel);
-    qctWriter = new QctWriter(fileChannel, LicenseInformation.SIZE);
+    qctWriter = new QctWriter(fileChannel, LicenseInformation.HEADER_SIZE);
   }
 
   @AfterEach

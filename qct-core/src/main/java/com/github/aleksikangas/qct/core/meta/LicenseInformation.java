@@ -28,7 +28,7 @@ import java.util.Objects;
  */
 public record LicenseInformation(int identifier,
                                  SerialNumber serialNumber) {
-  public static final int SIZE = 0x28 + 0x64;
+  public static final int HEADER_SIZE = 0x28 + 0x64;
 
   public LicenseInformation {
     Objects.requireNonNull(serialNumber);
@@ -65,7 +65,7 @@ public record LicenseInformation(int identifier,
     public static void encodeWithPointer(final QctWriter qctWriter,
                                          final LicenseInformation licenseInformation,
                                          final int byteOffset) {
-      final int pointer = qctWriter.allocate(LicenseInformation.SIZE);
+      final int pointer = qctWriter.allocate(LicenseInformation.HEADER_SIZE);
       qctWriter.writePointer(byteOffset, pointer);
       encode(qctWriter, licenseInformation, pointer);
     }

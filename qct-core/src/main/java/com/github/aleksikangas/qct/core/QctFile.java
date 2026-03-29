@@ -5,6 +5,7 @@
 package com.github.aleksikangas.qct.core;
 
 import com.github.aleksikangas.qct.core.exception.QctRuntimeException;
+import com.github.aleksikangas.qct.core.georef.GeoreferencingCoefficients;
 import com.github.aleksikangas.qct.core.meta.Metadata;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
@@ -31,14 +32,21 @@ import java.util.Set;
  * +--------+--------------+----------------------------------------------------+
  * </pre>
  */
-public record QctFile(Metadata metadata) {
+public record QctFile(Metadata metadata,
+                      GeoreferencingCoefficients georeferencingCoefficients) {
   public QctFile {
     Objects.requireNonNull(metadata);
+    Objects.requireNonNull(georeferencingCoefficients);
+  }
+
+  public int headerSize() {
+    // TODO
+    return 0x45A0;
   }
 
   public static final class Decoder {
     public static QctFile decode(final QctReader qctReader) {
-      return new QctFile(Metadata.Decoder.decode(qctReader));
+      return new QctFile(Metadata.Decoder.decode(qctReader), GeoreferencingCoefficients.Decoder.decode(qctReader));
     }
 
     private Decoder() {
@@ -50,6 +58,7 @@ public record QctFile(Metadata metadata) {
       Objects.requireNonNull(qctFile);
 
       Metadata.Encoder.encode(qctWriter, qctFile.metadata());
+      GeoreferencingCoefficients.Encoder.encode(qctWriter, qctFile.georeferencingCoefficients());
     }
 
     private Encoder() {

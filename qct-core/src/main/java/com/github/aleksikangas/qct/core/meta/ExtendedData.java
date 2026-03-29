@@ -31,7 +31,7 @@ public record ExtendedData(String mapType,
                            LicenseInformation licenseInformation,
                            String associatedData,
                            DigitalMapShop digitalMapShop) {
-  public static final int SIZE = 0x1C + 0x04;
+  public static final int HEADER_SIZE = 0x1C + 0x04;
 
   public ExtendedData {
     Objects.requireNonNull(mapType);
@@ -81,7 +81,7 @@ public record ExtendedData(String mapType,
     public static void encodeWithPointer(final QctWriter qctWriter,
                                          final ExtendedData extendedData,
                                          final int byteOffset) {
-      final int pointer = qctWriter.allocate(ExtendedData.SIZE);
+      final int pointer = qctWriter.allocate(ExtendedData.HEADER_SIZE);
       qctWriter.writePointer(byteOffset, pointer);
       encode(qctWriter, extendedData, pointer);
     }

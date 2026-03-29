@@ -29,7 +29,7 @@ class DigitalMapShopTest {
     tempFile = Files.createTempFile("digital-map-shop", ".bin");
     fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE);
     qctReader = new QctReader(fileChannel);
-    qctWriter = new QctWriter(fileChannel, DigitalMapShop.SIZE);
+    qctWriter = new QctWriter(fileChannel, DigitalMapShop.HEADER_SIZE);
   }
 
   @AfterEach

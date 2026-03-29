@@ -22,7 +22,7 @@ import java.util.Objects;
 public record DigitalMapShop(int size,
                              String qc3Url) {
   @SuppressWarnings("java:S1845")
-  public static final int SIZE = 0x04 + 0x04;
+  public static final int HEADER_SIZE = 0x04 + 0x04;
 
   public DigitalMapShop {
     Objects.requireNonNull(qc3Url);
@@ -54,7 +54,7 @@ public record DigitalMapShop(int size,
     public static void encodeWithPointer(final QctWriter qctWriter,
                                          final DigitalMapShop digitalMapShop,
                                          final int byteOffset) {
-      final int pointer = qctWriter.allocate(DigitalMapShop.SIZE);
+      final int pointer = qctWriter.allocate(DigitalMapShop.HEADER_SIZE);
       qctWriter.writePointer(byteOffset, pointer);
       encode(qctWriter, digitalMapShop, pointer);
     }

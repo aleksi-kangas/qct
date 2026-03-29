@@ -4,7 +4,6 @@
 
 package com.github.aleksikangas.qct.core;
 
-import com.github.aleksikangas.qct.core.meta.Metadata;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -31,7 +30,7 @@ class QctFileTest {
       final QctFile originalQctFile = QctFile.Decoder.decode(qctReader);
       final Path tempFile = Files.createTempFile("qct", ".bin");
       try (final var writeChannel = FileChannel.open(tempFile, StandardOpenOption.WRITE)) {
-        final var qctWriter = new QctWriter(writeChannel, Metadata.SIZE);
+        final var qctWriter = new QctWriter(writeChannel, originalQctFile.headerSize());
         QctFile.Encoder.encode(qctWriter, originalQctFile);
       }
       try (final var readChannel2 = FileChannel.open(tempFile, StandardOpenOption.READ)) {

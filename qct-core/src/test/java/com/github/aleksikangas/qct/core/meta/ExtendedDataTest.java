@@ -28,7 +28,7 @@ class ExtendedDataTest {
     tempFile = Files.createTempFile("extended-data", ".bin");
     fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE);
     qctReader = new QctReader(fileChannel);
-    qctWriter = new QctWriter(fileChannel, ExtendedData.SIZE);
+    qctWriter = new QctWriter(fileChannel, ExtendedData.HEADER_SIZE);
   }
 
   @AfterEach
