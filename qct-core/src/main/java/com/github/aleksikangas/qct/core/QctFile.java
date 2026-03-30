@@ -10,6 +10,7 @@ import com.github.aleksikangas.qct.core.exception.QctRuntimeException;
 import com.github.aleksikangas.qct.core.georef.GeoreferencingCoefficients;
 import com.github.aleksikangas.qct.core.image.ImageIndex;
 import com.github.aleksikangas.qct.core.meta.Metadata;
+import com.github.aleksikangas.qct.core.utils.BufferedQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 
@@ -105,7 +106,7 @@ public record QctFile(Metadata metadata,
   static void main(final String[] args) {
     final Path path = Paths.get(args[0]);
     try (final var fileChannel = FileChannel.open(path, Set.of(StandardOpenOption.READ))) {
-      final var qctReader = new QctReader(fileChannel);
+      final var qctReader = new BufferedQctReader(fileChannel);
       final QctFile qctFile = QctFile.Decoder.decode(qctReader);
       System.out.println(qctFile);
     } catch (final IOException e) {
