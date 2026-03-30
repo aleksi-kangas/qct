@@ -13,6 +13,8 @@ import com.github.aleksikangas.qct.core.meta.Metadata;
 import com.github.aleksikangas.qct.core.utils.BufferedQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -42,6 +44,8 @@ public record QctFile(Metadata metadata,
                       Palette palette,
                       InterpolationMatrix interpolationMatrix,
                       ImageIndex imageIndex) {
+  private static final Logger LOG = LoggerFactory.getLogger(QctFile.class);
+
   public QctFile {
     Objects.requireNonNull(metadata);
     Objects.requireNonNull(georeferencingCoefficients);
@@ -108,7 +112,9 @@ public record QctFile(Metadata metadata,
     try (final var fileChannel = FileChannel.open(path, Set.of(StandardOpenOption.READ))) {
       final var qctReader = new BufferedQctReader(fileChannel);
       final QctFile qctFile = QctFile.Decoder.decode(qctReader);
-      System.out.println(qctFile);
+      if (LOG.isInfoEnabled()) {
+        LOG.info(qctFile.toString());
+      }
     } catch (final IOException e) {
       throw new QctRuntimeException(e);
     }
