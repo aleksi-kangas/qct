@@ -5,6 +5,7 @@
 package com.github.aleksikangas.qct.core.image.tile;
 
 import com.github.aleksikangas.qct.core.color.Palette;
+import com.github.aleksikangas.qct.core.image.tile.huffman.HuffmanCoding;
 import com.github.aleksikangas.qct.core.image.tile.rle.RunLengthEncoding;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
@@ -84,7 +85,7 @@ public record ImageTile(Encoding encoding,
     public static ImageTile decode(final QctReader qctReader, final int byteOffset) {
       final Encoding encoding = encodingOf(qctReader, byteOffset);
       return switch (encoding) {
-        case HUFFMAN_CODING -> placeholderImageTile(Encoding.HUFFMAN_CODING);
+        case HUFFMAN_CODING -> HuffmanCoding.decode(qctReader, byteOffset);
         case PIXEL_PACKING -> placeholderImageTile(Encoding.PIXEL_PACKING);
         case RUN_LENGTH_ENCODING -> RunLengthEncoding.decode(qctReader, byteOffset);
       };
