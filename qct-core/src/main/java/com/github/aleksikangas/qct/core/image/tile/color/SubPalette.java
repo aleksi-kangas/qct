@@ -66,7 +66,8 @@ public record SubPalette(Encoding encoding,
    * @return the number of bits required to index the sub-palette
    */
   public int bitsRequiredToIndex() {
-    if (size <= 1) return 0;
+    if (size == 0) return 0;
+    if (size == 1) return 1;
     return (int) Math.ceil((Math.log(size) / Math.log(2)));
   }
 

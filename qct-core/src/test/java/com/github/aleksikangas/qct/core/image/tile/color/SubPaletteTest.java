@@ -96,8 +96,8 @@ class SubPaletteTest {
 
     @Test
     void bitsRequiredToIndex() {
-      assertEquals(0, new SubPalette(Encoding.RUN_LENGTH_ENCODING, 1, new int[]{ 0 }).bitsRequiredToIndex());
       assertEquals(0, new SubPalette(Encoding.RUN_LENGTH_ENCODING, 0, new int[0]).bitsRequiredToIndex());
+      assertEquals(1, new SubPalette(Encoding.RUN_LENGTH_ENCODING, 1, new int[]{ 0 }).bitsRequiredToIndex());
       assertEquals(1, new SubPalette(Encoding.RUN_LENGTH_ENCODING, 2, new int[]{ 0, 1 }).bitsRequiredToIndex());
       assertEquals(3, new SubPalette(Encoding.RUN_LENGTH_ENCODING, 5, new int[5]).bitsRequiredToIndex());
       assertEquals(8, new SubPalette(Encoding.RUN_LENGTH_ENCODING, 200, new int[200]).bitsRequiredToIndex());
