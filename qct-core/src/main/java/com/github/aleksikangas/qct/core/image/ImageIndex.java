@@ -106,8 +106,7 @@ public record ImageIndex(ImageTile[][] imageTiles) {
 
       final int height = metadata.heightTiles();
       final int width = metadata.widthTiles();
-      Preconditions.checkState(height > 0, "height must be > 0");
-      Preconditions.checkState(width > 0, "width must be > 0");
+      Preconditions.checkState(height > 0 && width > 0, "height and width must be > 0");
       Preconditions.checkState(imageIndex.heightTiles() == height && imageIndex.widthTiles() == width,
                                "ImageIndex dimensions must match Metadata");
 
