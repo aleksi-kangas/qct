@@ -4,7 +4,7 @@
 
 package com.github.aleksikangas.qct.core;
 
-import com.github.aleksikangas.qct.core.utils.DirectQctReader;
+import com.github.aleksikangas.qct.core.utils.BufferedQctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -25,21 +25,21 @@ class QctFileTest {
   @ParameterizedTest
   @MethodSource("qctFilesProvider")
   void roundTripTest(final Path path) throws Exception {
-    try (FileChannel readChannel = FileChannel.open(path, StandardOpenOption.READ)) {
-      final var qctReader = new DirectQctReader(readChannel);
-      final QctFile originalQctFile = QctFile.Decoder.decode(qctReader);
+    try (FileChannel originalReadFileChannel = FileChannel.open(path, StandardOpenOption.READ)) {
+      final var originalQctReader = new BufferedQctReader(originalReadFileChannel);
+      final QctFile originalQctFile = QctFile.Decoder.decode(originalQctReader);
       final Path tempFile = Files.createTempFile("qct", ".bin");
-      try (final var writeChannel = FileChannel.open(tempFile, StandardOpenOption.WRITE)) {
-        final var qctWriter = new QctWriter(writeChannel, originalQctFile.headerSize());
-        QctFile.Encoder.encode(qctWriter, originalQctFile);
+      try (final var tempWriteFileChannel = FileChannel.open(tempFile, StandardOpenOption.WRITE)) {
+        final var tempQctWriter = new QctWriter(tempWriteFileChannel, originalQctFile.headerSize());
+        QctFile.Encoder.encode(tempQctWriter, originalQctFile);
       }
-      try (final var readChannel2 = FileChannel.open(tempFile, StandardOpenOption.READ)) {
-        final var qctReader2 = new DirectQctReader(readChannel2);
-        final QctFile decoded = QctFile.Decoder.decode(qctReader2);
-        assertEquals(originalQctFile.metadata(), decoded.metadata());
-        assertEquals(originalQctFile.georeferencingCoefficients(), decoded.georeferencingCoefficients());
-        assertEquals(originalQctFile.palette(), decoded.palette());
-        assertEquals(originalQctFile.interpolationMatrix(), decoded.interpolationMatrix());
+      try (final var tempReadFileChannel = FileChannel.open(tempFile, StandardOpenOption.READ)) {
+        final var tempQctReader = new BufferedQctReader(tempReadFileChannel);
+        final QctFile decodedQctFile = QctFile.Decoder.decode(tempQctReader);
+        assertEquals(originalQctFile.metadata(), decodedQctFile.metadata());
+        assertEquals(originalQctFile.georeferencingCoefficients(), decodedQctFile.georeferencingCoefficients());
+        assertEquals(originalQctFile.palette(), decodedQctFile.palette());
+        assertEquals(originalQctFile.interpolationMatrix(), decodedQctFile.interpolationMatrix());
       }
       Files.deleteIfExists(tempFile);
     }
