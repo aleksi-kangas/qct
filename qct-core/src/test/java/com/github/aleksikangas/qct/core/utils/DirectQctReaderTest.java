@@ -17,14 +17,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.AdditionalMatchers.geq;
 import static org.mockito.Mockito.*;
 
-final class QctReaderTest {
+final class DirectQctReaderTest {
   private FileChannel mockFileChannel;
   private QctReader qctReader;
 
   @BeforeEach
   void setUp() {
     mockFileChannel = mock(FileChannel.class);
-    qctReader = new QctReader(mockFileChannel);
+    qctReader = new DirectQctReader(mockFileChannel);
   }
 
   @Test

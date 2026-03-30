@@ -4,6 +4,7 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
+import com.github.aleksikangas.qct.core.utils.DirectQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 import org.junit.jupiter.api.*;
@@ -27,7 +28,7 @@ class ExtendedDataTest {
   void beforeEach() throws IOException {
     tempFile = Files.createTempFile("extended-data", ".bin");
     fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE);
-    qctReader = new QctReader(fileChannel);
+    qctReader = new DirectQctReader(fileChannel);
     qctWriter = new QctWriter(fileChannel, ExtendedData.HEADER_SIZE);
   }
 

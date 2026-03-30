@@ -6,6 +6,7 @@ package com.github.aleksikangas.qct.core.georef;
 
 
 import com.github.aleksikangas.qct.core.meta.DatumShift;
+import com.github.aleksikangas.qct.core.utils.DirectQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 import org.junit.jupiter.api.*;
@@ -31,7 +32,7 @@ class GeoreferencingCoefficientsTest {
   void beforeEach() throws IOException {
     tempFile = Files.createTempFile("georef", ".bin");
     fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE);
-    qctReader = new QctReader(fileChannel);
+    qctReader = new DirectQctReader(fileChannel);
     qctWriter = new QctWriter(fileChannel, GeoreferencingCoefficients.HEADER_SIZE);
   }
 
