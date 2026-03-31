@@ -7,6 +7,8 @@ package com.github.aleksikangas.qct.core.image.tile;
 import com.github.aleksikangas.qct.core.color.Palette;
 import com.github.aleksikangas.qct.core.image.tile.huffman.HuffmanCoding;
 import com.github.aleksikangas.qct.core.image.tile.rle.RunLengthEncoding;
+import com.github.aleksikangas.qct.core.image.tile.utils.ImageTileEncodingChooser;
+import com.github.aleksikangas.qct.core.image.tile.utils.ImageTileInterlacer;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 import com.google.common.base.Preconditions;
@@ -17,8 +19,8 @@ import java.util.Objects;
 
 /**
  * Represents a single tile of an image. Each tile within the image is compressed to reduce the size of the image file.
- * Three main compression algorithms ({@link Encoding}) are used to compress the image data, and all three
- * algorithms rely on the fact that an image tile will likely contain fewer colors than the overall image.
+ * Three main compression algorithms ({@link Encoding}) are used to compress the image data, and all three algorithms
+ * rely on the fact that an image tile will likely contain fewer colors than the overall image.
  *
  * @param encoding       {@link Encoding} of the image tile
  * @param paletteIndices palette indices of each pixel
@@ -70,17 +72,6 @@ public record ImageTile(Encoding encoding,
     return paletteIndices[y][x];
   }
 
-  private static Encoding encodingOf(final QctReader qctReader, final int byteOffset) {
-    final int firstByte = qctReader.readByte(byteOffset);
-    if (firstByte == 0 || firstByte == 255) {
-      return Encoding.HUFFMAN_CODING;
-    }
-    if (firstByte > 127) {
-      return Encoding.PIXEL_PACKING;
-    }
-    return Encoding.RUN_LENGTH_ENCODING;
-  }
-
   public static final class Decoder {
     public static ImageTile decode(final QctReader qctReader, final int byteOffset) {
       final Encoding encoding = encodingOf(qctReader, byteOffset);
@@ -89,35 +80,20 @@ public record ImageTile(Encoding encoding,
         case PIXEL_PACKING -> placeholderImageTile(Encoding.PIXEL_PACKING);
         case RUN_LENGTH_ENCODING -> RunLengthEncoding.decode(qctReader, byteOffset);
       };
-      return new ImageTile(decodedImageTile.encoding, deinterlaceRows(decodedImageTile.paletteIndices));
+      return new ImageTile(decodedImageTile.encoding,
+                           ImageTileInterlacer.deinterlaceRows(decodedImageTile.paletteIndices));
     }
 
-    /**
-     * Deinterlaces rows of an {@link ImageTile}. The pixel content of each tile is scanned from left to right in rows of
-     * 64 pixels. The rows however are not in top to bottom order. Instead, they are interlaced using a bit-reverse
-     * sequence. The decompressed tile data must be scanned out row at a time using this row sequence. See Chapter 7.1 in
-     * the specification.
-     *
-     * @param paletteIndices of the {@link ImageTile}
-     * @return deinterlaced {@link com.github.aleksikangas.qct.core.color.Palette} indices of the {@link ImageTile}
-     */
-    private static int[][] deinterlaceRows(final int[][] paletteIndices) {
-      final var deinterlacedPaletteIndices = new int[ImageTile.HEIGHT][ImageTile.WIDTH];
-      for (int i = 0; i < ImageTile.HEIGHT; ++i) {
-        deinterlacedPaletteIndices[DEINTERLACED_ROW_SEQUENCE[i]] = paletteIndices[i];
+    private static Encoding encodingOf(final QctReader qctReader, final int byteOffset) {
+      final int firstByte = qctReader.readByte(byteOffset);
+      if (firstByte == 0 || firstByte == 255) {
+        return Encoding.HUFFMAN_CODING;
       }
-      return deinterlacedPaletteIndices;
-    }
-
-    private static int[] deinterlacedRowSequence() {
-      final int[] deinterlacedRowSequence = new int[ImageTile.HEIGHT];
-      for (int i = 0; i < ImageTile.HEIGHT; ++i) {
-        deinterlacedRowSequence[INTERLACED_ROW_SEQUENCE[i]] = i;
+      if (firstByte > 127) {
+        return Encoding.PIXEL_PACKING;
       }
-      return deinterlacedRowSequence;
+      return Encoding.RUN_LENGTH_ENCODING;
     }
-
-    private static final int[] DEINTERLACED_ROW_SEQUENCE = deinterlacedRowSequence();
 
     private Decoder() {
     }
@@ -127,25 +103,9 @@ public record ImageTile(Encoding encoding,
     public static void encode(final QctWriter qctWriter, final ImageTile imageTile, final int byteOffset) {
       Objects.requireNonNull(imageTile);
       final ImageTile interlacedImageTile = new ImageTile(imageTile.encoding(),
-                                                          interlaceRows(imageTile.paletteIndices()));
-      switch (interlacedImageTile.encoding()) {
-        case RUN_LENGTH_ENCODING -> RunLengthEncoding.encode(qctWriter, interlacedImageTile, byteOffset);
-        case PIXEL_PACKING -> throw new UnsupportedOperationException("PIXEL_PACKING encoding not yet implemented");
-        case HUFFMAN_CODING -> throw new UnsupportedOperationException("HUFFMAN_CODING encoding not yet implemented");
-        default -> throw new IllegalArgumentException("Unknown encoding: " + interlacedImageTile.encoding());
-      }
-    }
-
-    /**
-     * Interlaces rows using the same bit-reverse order used by the decoder.
-     * This must be done before any compression (RLE, Huffman, etc.).
-     */
-    private static int[][] interlaceRows(final int[][] paletteIndices) {
-      final var interlaced = new int[ImageTile.HEIGHT][ImageTile.WIDTH];
-      for (int i = 0; i < ImageTile.HEIGHT; ++i) {
-        interlaced[i] = paletteIndices[INTERLACED_ROW_SEQUENCE[i]];
-      }
-      return interlaced;
+                                                          ImageTileInterlacer.interlaceRows(imageTile.paletteIndices()));
+      final ImageTileEncodingCandidate bestCandidate = ImageTileEncodingChooser.chooseEncoding(interlacedImageTile);
+      bestCandidate.encode(qctWriter, byteOffset);
     }
 
     private Encoder() {
@@ -161,69 +121,4 @@ public record ImageTile(Encoding encoding,
     }
     return new ImageTile(encoding, paletteIndices);
   }
-
-  private static final int[] INTERLACED_ROW_SEQUENCE = new int[]{ 0,
-                                                                  32,
-                                                                  16,
-                                                                  48,
-                                                                  8,
-                                                                  40,
-                                                                  24,
-                                                                  56,
-                                                                  4,
-                                                                  36,
-                                                                  20,
-                                                                  52,
-                                                                  12,
-                                                                  44,
-                                                                  28,
-                                                                  60,
-                                                                  2,
-                                                                  34,
-                                                                  18,
-                                                                  50,
-                                                                  10,
-                                                                  42,
-                                                                  26,
-                                                                  58,
-                                                                  6,
-                                                                  38,
-                                                                  22,
-                                                                  54,
-                                                                  14,
-                                                                  46,
-                                                                  30,
-                                                                  62,
-                                                                  1,
-                                                                  33,
-                                                                  17,
-                                                                  49,
-                                                                  9,
-                                                                  41,
-                                                                  25,
-                                                                  57,
-                                                                  5,
-                                                                  37,
-                                                                  21,
-                                                                  53,
-                                                                  13,
-                                                                  45,
-                                                                  29,
-                                                                  61,
-                                                                  3,
-                                                                  35,
-                                                                  19,
-                                                                  51,
-                                                                  11,
-                                                                  43,
-                                                                  27,
-                                                                  59,
-                                                                  7,
-                                                                  39,
-                                                                  23,
-                                                                  55,
-                                                                  15,
-                                                                  47,
-                                                                  31,
-                                                                  63 };
 }

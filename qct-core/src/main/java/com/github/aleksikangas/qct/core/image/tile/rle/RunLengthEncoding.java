@@ -7,10 +7,15 @@ package com.github.aleksikangas.qct.core.image.tile.rle;
 import com.github.aleksikangas.qct.core.color.Palette;
 import com.github.aleksikangas.qct.core.image.tile.ImageTile;
 import com.github.aleksikangas.qct.core.image.tile.ImageTile.Encoding;
+import com.github.aleksikangas.qct.core.image.tile.ImageTileEncodingCandidate;
 import com.github.aleksikangas.qct.core.image.tile.color.SubPalette;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 import com.google.common.base.Preconditions;
+
+import javax.annotation.Nonnull;
+import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * Decoding & encoding functionality for {@link ImageTile}s using {@link Encoding#RUN_LENGTH_ENCODING}.
@@ -27,12 +32,75 @@ public final class RunLengthEncoding {
     return new ImageTile(Encoding.RUN_LENGTH_ENCODING, paletteIndices);
   }
 
-  public static void encode(final QctWriter qctWriter, final ImageTile imageTile, final int byteOffset) {
+  /**
+   * A candidate for {@link ImageTile} encoding.
+   *
+   * @param encoding   {@link Encoding#RUN_LENGTH_ENCODING}
+   * @param subPalette the effective {@link SubPalette}
+   * @param pixelBytes pixel data bytes
+   */
+  public record RleImageTileEncodingCandidate(Encoding encoding,
+                                              SubPalette subPalette,
+                                              int[] pixelBytes) implements ImageTileEncodingCandidate {
+    public RleImageTileEncodingCandidate(final SubPalette subPalette, final int[] pixelBytes) {
+      this(Encoding.RUN_LENGTH_ENCODING, subPalette, pixelBytes);
+    }
+
+    public RleImageTileEncodingCandidate {
+      Objects.requireNonNull(encoding);
+      Objects.requireNonNull(subPalette);
+      Objects.requireNonNull(pixelBytes);
+    }
+
+    @Override
+    public int sizeBytes() {
+      return subPalette.size() + pixelBytes.length;
+    }
+
+    @Override
+    public void encode(final QctWriter qctWriter, final int byteOffset) {
+      SubPalette.Encoder.encode(qctWriter, subPalette, byteOffset);
+      final int pixelDataOffset = Math.toIntExact(byteOffset + 0x01L + subPalette.size());
+      qctWriter.writeBytes(pixelDataOffset, pixelBytes);
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+      if (o == null || getClass() != o.getClass()) return false;
+      final RleImageTileEncodingCandidate that = (RleImageTileEncodingCandidate) o;
+      return Objects.deepEquals(pixelBytes, that.pixelBytes) &&
+             encoding == that.encoding &&
+             Objects.equals(subPalette, that.subPalette);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(encoding, subPalette, Arrays.hashCode(pixelBytes));
+    }
+
+    @Nonnull
+    @Override
+    public String toString() {
+      return "RleImageTileEncodingCandidate{" +
+             "encoding=" +
+             encoding +
+             ", subPalette=" +
+             subPalette +
+             ", pixelBytes=" +
+             Arrays.toString(pixelBytes) +
+             '}';
+    }
+  }
+
+  public static RleImageTileEncodingCandidate candidateOf(final ImageTile imageTile) {
     final int[][] paletteIndices = imageTile.paletteIndices();
-    final SubPalette subPalette = SubPalette.Encoder.encode(qctWriter, imageTile, byteOffset);
-    final int pixelDataOffset = Math.toIntExact(byteOffset + 0x01L + subPalette.size());
+    final SubPalette subPalette = SubPalette.of(imageTile);
     final int[] bytes = encodePixelData(subPalette, paletteIndices);
-    qctWriter.writeBytes(pixelDataOffset, bytes);
+    return new RleImageTileEncodingCandidate(subPalette, bytes);
+  }
+
+  public static void encode(final QctWriter qctWriter, final ImageTile imageTile, final int byteOffset) {
+    candidateOf(imageTile).encode(qctWriter, byteOffset);
   }
 
   private static int[][] decodePixelData(final SubPalette subPalette, final int[] bytes) {

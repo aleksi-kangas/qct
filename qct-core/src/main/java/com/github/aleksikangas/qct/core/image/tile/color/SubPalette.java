@@ -34,6 +34,21 @@ public record SubPalette(Encoding encoding,
     Preconditions.checkState(paletteIndices.length == size);
   }
 
+  public static SubPalette of(final ImageTile imageTile) {
+    final Set<Integer> uniquePaletteIndices = new LinkedHashSet<>();
+    for (int y = 0; y < ImageTile.HEIGHT; ++y) {
+      for (int x = 0; x < ImageTile.WIDTH; ++x) {
+        uniquePaletteIndices.add(imageTile.paletteIndices()[y][x]);
+      }
+    }
+    Preconditions.checkState(!uniquePaletteIndices.isEmpty());
+
+    final int size = uniquePaletteIndices.size();
+    final int[] paletteIndices = uniquePaletteIndices.stream().mapToInt(Integer::intValue).toArray();
+    Arrays.sort(paletteIndices);
+    return new SubPalette(imageTile.encoding(), size, paletteIndices);
+  }
+
   @Override
   public boolean equals(final Object o) {
     if (o == null || getClass() != o.getClass()) return false;
@@ -106,22 +121,14 @@ public record SubPalette(Encoding encoding,
   }
 
   public static final class Encoder {
-    public static SubPalette encode(final QctWriter qctWriter, final ImageTile imageTile, final int byteOffset) {
-      final Set<Integer> uniquePaletteIndices = new LinkedHashSet<>();
-      for (int y = 0; y < ImageTile.HEIGHT; ++y) {
-        for (int x = 0; x < ImageTile.WIDTH; ++x) {
-          uniquePaletteIndices.add(imageTile.paletteIndices()[y][x]);
-        }
-      }
-      Preconditions.checkState(!uniquePaletteIndices.isEmpty());
-
-      final int size = uniquePaletteIndices.size();
-      final int[] paletteIndices = uniquePaletteIndices.stream().mapToInt(Integer::intValue).toArray();
-      Arrays.sort(paletteIndices);
-      final SubPalette subPalette = new SubPalette(imageTile.encoding(), size, paletteIndices);
-
+    public static void encode(final QctWriter qctWriter, final SubPalette subPalette, final int byteOffset) {
       qctWriter.writeByte(byteOffset, subPalette.sizeByte());
       qctWriter.writeBytes(byteOffset + 0x01, subPalette.paletteIndices());
+    }
+
+    public static SubPalette encode(final QctWriter qctWriter, final ImageTile imageTile, final int byteOffset) {
+      final var subPalette = SubPalette.of(imageTile);
+      encode(qctWriter, subPalette, byteOffset);
       return subPalette;
     }
 
