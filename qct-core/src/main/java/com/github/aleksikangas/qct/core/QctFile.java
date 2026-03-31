@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -107,13 +108,45 @@ public record QctFile(Metadata metadata,
     }
   }
 
+  @SuppressWarnings("java:S106")
   static void main(final String[] args) {
-    final Path path = Paths.get(args[0]);
-    try (final var fileChannel = FileChannel.open(path, Set.of(StandardOpenOption.READ))) {
-      final var qctReader = new BufferedQctReader(fileChannel);
+    if (args.length == 0) {
+      System.err.println("Usage: java ... QctFile <input.qct> [output.qct]");
+      System.err.println("       If no output is specified, '-test.qct' will be appended to the input filename.");
+      System.exit(1);
+    }
+    final Path inputPath = Paths.get(args[0]);
+
+    final Path outputPath;
+    if (args.length >= 2) {
+      outputPath = Paths.get(args[1]);
+    } else {
+      final String inputFileName = inputPath.getFileName().toString();
+      final String baseName = inputFileName.replaceFirst("[.][^.]+$", ""); // remove extension
+      final String extension = inputFileName.substring(inputFileName.lastIndexOf('.'));
+      final String outputFileName = baseName + "-test" + extension;
+
+      outputPath = inputPath.getParent() != null
+                   ? inputPath.getParent().resolve(outputFileName)
+                   : Paths.get(outputFileName);
+    }
+
+    decodeEncode(inputPath, outputPath);
+  }
+
+  private static void decodeEncode(final Path readPath, final Path writePath) {
+    try (final var readFileChannel = FileChannel.open(readPath, Set.of(StandardOpenOption.READ))) {
+      final var qctReader = new BufferedQctReader(readFileChannel);
       final QctFile qctFile = QctFile.Decoder.decode(qctReader);
       if (LOG.isInfoEnabled()) {
         LOG.info(qctFile.toString());
+      }
+      if (Files.notExists(writePath)) {
+        Files.createFile(writePath);
+      }
+      try (final var writeFileChannel = FileChannel.open(writePath, Set.of(StandardOpenOption.WRITE))) {
+        final var qctWriter = new QctWriter(writeFileChannel, qctFile.headerSize());
+        QctFile.Encoder.encode(qctWriter, qctFile);
       }
     } catch (final IOException e) {
       throw new QctRuntimeException(e);
