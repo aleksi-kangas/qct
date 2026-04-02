@@ -24,11 +24,7 @@ public final class RunLengthEncoding {
   public static ImageTile decode(final QctReader qctReader, final int byteOffset) {
     final SubPalette subPalette = SubPalette.Decoder.decode(qctReader, Encoding.RUN_LENGTH_ENCODING, byteOffset);
     final int pixelDataOffset = Math.toIntExact(byteOffset + 0x01L + subPalette.size());
-    // In order to avoid reading one byte at a time from the file,
-    // read bytes into a buffer assuming the worst case of one byte per pixel (64 x 64 = 4096 bytes),
-    // which practically should never occur.
-    final int[] bytes = qctReader.readBytesSafe(pixelDataOffset, ImageTile.PIXEL_COUNT);
-    final int[][] paletteIndices = decodePixelData(subPalette, bytes);
+    final int[][] paletteIndices = decodePixelData(qctReader, subPalette, pixelDataOffset);
     return new ImageTile(Encoding.RUN_LENGTH_ENCODING, paletteIndices);
   }
 
@@ -103,12 +99,14 @@ public final class RunLengthEncoding {
     candidateOf(imageTile).encode(qctWriter, byteOffset);
   }
 
-  private static int[][] decodePixelData(final SubPalette subPalette, final int[] bytes) {
+  private static int[][] decodePixelData(final QctReader qctReader,
+                                         final SubPalette subPalette,
+                                         final int pixelDataByteOffset) {
     final var paletteIndices = new int[ImageTile.HEIGHT][ImageTile.WIDTH];
-    int byteIndex = 0;
+    int byteOffset = pixelDataByteOffset;
     int pixelCount = 0;
     while (pixelCount < ImageTile.PIXEL_COUNT) {
-      final int rleRawByte = bytes[byteIndex++];
+      final int rleRawByte = qctReader.readByte(byteOffset++);
       final RleByte rleByte = RleByte.decode(subPalette, rleRawByte);
       for (int i = 0; i < rleByte.runLength; ++i) {
         final int y = (pixelCount + i) / ImageTile.WIDTH;
