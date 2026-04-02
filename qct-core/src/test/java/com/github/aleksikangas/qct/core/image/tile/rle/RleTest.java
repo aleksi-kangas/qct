@@ -21,7 +21,7 @@ import java.util.Arrays;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class RunLengthEncodingTest {
+class RleTest {
   private Path tempFile;
   private FileChannel fileChannel;
   private QctReader qctReader;
@@ -48,8 +48,8 @@ class RunLengthEncodingTest {
     void encodeAndDecodeSimpleRun() {
       final var originalImageTile = new ImageTile(Encoding.RUN_LENGTH_ENCODING, createUniformTile(42));
       final int byteOffset = 0;
-      RunLengthEncoding.encode(qctWriter, originalImageTile, byteOffset);
-      final ImageTile decodedImageTile = RunLengthEncoding.decode(qctReader, byteOffset);
+      RleEncoder.encode(qctWriter, originalImageTile, byteOffset);
+      final ImageTile decodedImageTile = RleDecoder.decode(qctReader, byteOffset);
       assertEquals(Encoding.RUN_LENGTH_ENCODING, decodedImageTile.encoding());
       assertArrayEquals(originalImageTile.paletteIndices(), decodedImageTile.paletteIndices());
     }
@@ -64,8 +64,8 @@ class RunLengthEncodingTest {
       }
       final var originalImageTile = new ImageTile(Encoding.RUN_LENGTH_ENCODING, data);
       final int byteOffset = 100;
-      RunLengthEncoding.encode(qctWriter, originalImageTile, byteOffset);
-      final ImageTile decodedImageTile = RunLengthEncoding.decode(qctReader, byteOffset);
+      RleEncoder.encode(qctWriter, originalImageTile, byteOffset);
+      final ImageTile decodedImageTile = RleDecoder.decode(qctReader, byteOffset);
       assertEquals(originalImageTile, decodedImageTile);
     }
 
@@ -85,8 +85,8 @@ class RunLengthEncodingTest {
       }
       final var originalImageTile = new ImageTile(Encoding.RUN_LENGTH_ENCODING, data);
       final int byteOffset = 200;
-      RunLengthEncoding.encode(qctWriter, originalImageTile, byteOffset);
-      final ImageTile decodedImageTile = RunLengthEncoding.decode(qctReader, byteOffset);
+      RleEncoder.encode(qctWriter, originalImageTile, byteOffset);
+      final ImageTile decodedImageTile = RleDecoder.decode(qctReader, byteOffset);
       assertEquals(originalImageTile, decodedImageTile);
     }
 
@@ -95,8 +95,8 @@ class RunLengthEncodingTest {
       final int[][] data = createTileWithValues(10, 20, 30, 40);
       final var originalImageTile = new ImageTile(Encoding.RUN_LENGTH_ENCODING, data);
       final int byteOffset = 300;
-      RunLengthEncoding.encode(qctWriter, originalImageTile, byteOffset);
-      final ImageTile decodedImageTile = RunLengthEncoding.decode(qctReader, byteOffset);
+      RleEncoder.encode(qctWriter, originalImageTile, byteOffset);
+      final ImageTile decodedImageTile = RleDecoder.decode(qctReader, byteOffset);
       assertEquals(originalImageTile, decodedImageTile);
     }
 
@@ -111,8 +111,8 @@ class RunLengthEncodingTest {
       }
       final var originalImageTile = new ImageTile(Encoding.RUN_LENGTH_ENCODING, data);
       final int byteOffset = 400;
-      RunLengthEncoding.encode(qctWriter, originalImageTile, byteOffset);
-      final ImageTile decodedImageTile = RunLengthEncoding.decode(qctReader, byteOffset);
+      RleEncoder.encode(qctWriter, originalImageTile, byteOffset);
+      final ImageTile decodedImageTile = RleDecoder.decode(qctReader, byteOffset);
       assertEquals(originalImageTile, decodedImageTile);
     }
   }
@@ -123,8 +123,8 @@ class RunLengthEncodingTest {
     @Test
     void singleColorTile() {
       final var originalImageTile = new ImageTile(Encoding.RUN_LENGTH_ENCODING, createUniformTile(255));
-      RunLengthEncoding.encode(qctWriter, originalImageTile, 0);
-      final ImageTile decodedImageTile = RunLengthEncoding.decode(qctReader, 0);
+      RleEncoder.encode(qctWriter, originalImageTile, 0);
+      final ImageTile decodedImageTile = RleDecoder.decode(qctReader, 0);
       assertEquals(originalImageTile, decodedImageTile);
     }
 
@@ -139,8 +139,8 @@ class RunLengthEncodingTest {
 
       ImageTile original = new ImageTile(Encoding.RUN_LENGTH_ENCODING, data);
 
-      RunLengthEncoding.encode(qctWriter, original, 50);
-      ImageTile decoded = RunLengthEncoding.decode(qctReader, 50);
+      RleEncoder.encode(qctWriter, original, 50);
+      ImageTile decoded = RleDecoder.decode(qctReader, 50);
 
       assertEquals(original, decoded);
     }

@@ -6,7 +6,7 @@ package com.github.aleksikangas.qct.core.image.tile.utils;
 
 import com.github.aleksikangas.qct.core.image.tile.ImageTile;
 import com.github.aleksikangas.qct.core.image.tile.ImageTileEncodingCandidate;
-import com.github.aleksikangas.qct.core.image.tile.rle.RunLengthEncoding;
+import com.github.aleksikangas.qct.core.image.tile.rle.RleEncoder;
 
 import java.util.Comparator;
 import java.util.HashSet;
@@ -21,7 +21,7 @@ public final class ImageTileEncodingChooser {
    */
   public static ImageTileEncodingCandidate chooseEncoding(final ImageTile imageTile) {
     final Set<ImageTileEncodingCandidate> candidates = new HashSet<>();
-    candidates.add(RunLengthEncoding.candidateOf(imageTile));
+    candidates.add(RleEncoder.Candidate.of(imageTile));
     // TODO Huffman, Pixel Packing
     return candidates.stream().min(Comparator.comparingInt(ImageTileEncodingCandidate::sizeBytes)).orElseThrow();
   }
