@@ -5,7 +5,7 @@
 package com.github.aleksikangas.qct.core.image.tile;
 
 import com.github.aleksikangas.qct.core.color.Palette;
-import com.github.aleksikangas.qct.core.image.tile.huffman.HuffmanCoding;
+import com.github.aleksikangas.qct.core.image.tile.huffman.HuffmanDecoder;
 import com.github.aleksikangas.qct.core.image.tile.rle.RleDecoder;
 import com.github.aleksikangas.qct.core.image.tile.utils.ImageTileEncodingChooser;
 import com.github.aleksikangas.qct.core.image.tile.utils.ImageTileInterlacer;
@@ -76,7 +76,7 @@ public record ImageTile(Encoding encoding,
     public static ImageTile decode(final QctReader qctReader, final int byteOffset) {
       final Encoding encoding = encodingOf(qctReader, byteOffset);
       final ImageTile decodedImageTile = switch (encoding) {
-        case HUFFMAN_CODING -> HuffmanCoding.decode(qctReader, byteOffset);
+        case HUFFMAN_CODING -> HuffmanDecoder.decode(qctReader, byteOffset);
         case PIXEL_PACKING -> placeholderImageTile(Encoding.PIXEL_PACKING);
         case RUN_LENGTH_ENCODING -> RleDecoder.decode(qctReader, byteOffset);
       };
@@ -100,12 +100,14 @@ public record ImageTile(Encoding encoding,
   }
 
   public static final class Encoder {
-    public static void encode(final QctWriter qctWriter, final ImageTile imageTile, final int byteOffset) {
+    public static int encode(final QctWriter qctWriter, final ImageTile imageTile) {
       Objects.requireNonNull(imageTile);
       final ImageTile interlacedImageTile = new ImageTile(imageTile.encoding(),
                                                           ImageTileInterlacer.interlaceRows(imageTile.paletteIndices()));
       final ImageTileEncodingCandidate bestCandidate = ImageTileEncodingChooser.chooseEncoding(interlacedImageTile);
-      bestCandidate.encode(qctWriter, byteOffset);
+      final int tileByteOffset = qctWriter.allocate(bestCandidate.sizeBytes());
+      bestCandidate.encode(qctWriter, tileByteOffset);
+      return tileByteOffset;
     }
 
     private Encoder() {

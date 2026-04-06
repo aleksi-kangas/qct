@@ -110,17 +110,11 @@ public record ImageIndex(ImageTile[][] imageTiles) {
       Preconditions.checkState(imageIndex.heightTiles() == height && imageIndex.widthTiles() == width,
                                "ImageIndex dimensions must match Metadata");
 
-      // First, allocate space for all tile data and remember their starting offsets
       final int[][] tileOffsets = new int[height][width];
-
       for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
           final ImageTile tile = imageIndex.imageTile(y, x);
-          final int tileOffset = qctWriter.allocate(estimateTileSize(tile));
-          tileOffsets[y][x] = tileOffset;
-          // TODO Encode with RLE for now
-          final ImageTile rleTile = new ImageTile(ImageTile.Encoding.RUN_LENGTH_ENCODING, tile.paletteIndices());
-          ImageTile.Encoder.encode(qctWriter, rleTile, tileOffset);
+          tileOffsets[y][x] = ImageTile.Encoder.encode(qctWriter, tile);
         }
       }
       writePointerTable(qctWriter, tileOffsets);
@@ -135,12 +129,6 @@ public record ImageIndex(ImageTile[][] imageTiles) {
           qctWriter.writePointer(pointerOffset, tileOffsets[y][x]);
         }
       }
-    }
-
-    @Deprecated(forRemoval = true)
-    private static int estimateTileSize(final ImageTile tile) {
-      // Sub-palette (1 byte size + up to 256 indices) + worst-case RLE data (64*64 bytes)
-      return 1 + 256 + ImageTile.PIXEL_COUNT;
     }
 
     private Encoder() {

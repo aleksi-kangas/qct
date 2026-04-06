@@ -9,7 +9,12 @@ import com.github.aleksikangas.qct.core.utils.QctByteStream;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.google.common.base.Preconditions;
 
-public final class HuffmanCoding {
+/**
+ * Decoder of {@link ImageTile}s using {@link ImageTile.Encoding#HUFFMAN_CODING}.
+ *
+ * @see HuffmanEncoder
+ */
+public final class HuffmanDecoder {
   public static ImageTile decode(final QctReader qctReader, final int byteOffset) {
     final var qctByteStream = new QctByteStream(qctReader, byteOffset + 1);
     final var huffmanCodeBook = new HuffmanCodeBook(qctByteStream);
@@ -61,6 +66,6 @@ public final class HuffmanCoding {
     return paletteIndices;
   }
 
-  private HuffmanCoding() {
+  private HuffmanDecoder() {
   }
 }
