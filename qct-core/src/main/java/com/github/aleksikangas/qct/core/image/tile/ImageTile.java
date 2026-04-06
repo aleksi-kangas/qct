@@ -14,6 +14,7 @@ import com.github.aleksikangas.qct.core.utils.QctWriter;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
+import java.awt.*;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -69,7 +70,21 @@ public record ImageTile(Encoding encoding,
    * @return the {@link Palette} index of the pixel color value
    */
   public int pixelPaletteIndex(final int y, final int x) {
+    Objects.checkIndex(y, HEIGHT);
+    Objects.checkIndex(x, WIDTH);
     return paletteIndices[y][x];
+  }
+
+  /**
+   * Returns the pixel {@link Color} at the given location.
+   *
+   * @param palette to use
+   * @param y       y-coordinate, in tile coordinate space
+   * @param x       x-coordinate, in tile coordinate space
+   * @return the pixel {@link Color
+   */
+  public Color pixelColor(final Palette palette, final int y, final int x) {
+    return palette.color(pixelPaletteIndex(y, x));
   }
 
   public static final class Decoder {

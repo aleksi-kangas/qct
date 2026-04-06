@@ -4,6 +4,7 @@
 
 package com.github.aleksikangas.qct.core.image;
 
+import com.github.aleksikangas.qct.core.color.Palette;
 import com.github.aleksikangas.qct.core.image.tile.ImageTile;
 import com.github.aleksikangas.qct.core.meta.Metadata;
 import com.github.aleksikangas.qct.core.utils.QctReader;
@@ -11,6 +12,7 @@ import com.github.aleksikangas.qct.core.utils.QctWriter;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
+import java.awt.*;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -72,6 +74,16 @@ public record ImageIndex(ImageTile[][] imageTiles) {
     Objects.checkIndex(yTile, heightTiles());
     Objects.checkIndex(xTile, widthTiles());
     return imageTiles[yTile][xTile];
+  }
+
+  public Color pixelColor(final Palette palette, final int yPixel, final int xPixel) {
+    Objects.checkIndex(yPixel, heightPixels());
+    Objects.checkIndex(xPixel, widthPixels());
+    final int yTile = yPixel / ImageTile.HEIGHT;
+    final int xTile = xPixel / ImageTile.WIDTH;
+    final int yTilePixel = yPixel % ImageTile.HEIGHT;
+    final int xTilePixel = xPixel % ImageTile.WIDTH;
+    return imageTile(yTile, xTile).pixelColor(palette, yTilePixel, xTilePixel);
   }
 
   public static final class Decoder {

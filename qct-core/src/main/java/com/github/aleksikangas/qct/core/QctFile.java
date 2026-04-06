@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import java.awt.*;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
@@ -85,6 +86,18 @@ public record QctFile(Metadata metadata,
 
   public int widthPixels() {
     return imageIndex.widthPixels();
+  }
+
+  public int[] rgbPixels() {
+    final int[] rgbPixels = new int[imageIndex.pixelCount()];
+    for (int y = 0; y < imageIndex.heightPixels(); y++) {
+      for (int x = 0; x < imageIndex.widthPixels(); x++) {
+        final Color pixelColor = imageIndex.pixelColor(palette, y, x);
+        final int pixelIndex = y * imageIndex.widthPixels() + x;
+        rgbPixels[pixelIndex] = pixelColor.getRGB();
+      }
+    }
+    return rgbPixels;
   }
 
   public static final class Decoder {
