@@ -4,11 +4,16 @@
 
 package com.github.aleksikangas.qct.core.georef;
 
+import com.github.aleksikangas.qct.core.QctFile;
 import com.github.aleksikangas.qct.core.meta.DatumShift;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.util.Objects;
 
 /**
@@ -83,6 +88,7 @@ public record GeoreferencingCoefficients(double eas,
 
   private static final String FORMAT = "%.6f";
   private static final String FORMAT_WITH_LABEL = "%s: " + FORMAT;
+  private static final Logger LOG = LoggerFactory.getLogger(GeoreferencingCoefficients.class);
 
   public double[] easValues() {
     return new double[]{ eas, easY, easX, easYY, easXY, easXX, easYYY, easYYX, easYXX, easXXX, };
@@ -193,14 +199,6 @@ public record GeoreferencingCoefficients(double eas,
             "]";
   }
 
-  public record Wgs84Coordinates(double latitude,
-                                 double longitude) {
-  }
-
-  public record ImageCoordinates(double y,
-                                 double x) {
-  }
-
   /**
    * Transforms the given {@link ImageCoordinates} -> {@link Wgs84Coordinates}.
    *
@@ -209,25 +207,27 @@ public record GeoreferencingCoefficients(double eas,
    * @return transformed {@link Wgs84Coordinates}
    */
   public Wgs84Coordinates toWgs84(final ImageCoordinates imageCoordinates, final DatumShift datumShift) {
-    final double latitude = latXXX * Math.pow(imageCoordinates.x, 3) +
-                            latXX * Math.pow(imageCoordinates.x, 2) +
-                            latX * imageCoordinates.x +
-                            latYYY * Math.pow(imageCoordinates.y, 3) +
-                            latYY * Math.pow(imageCoordinates.y, 2) +
-                            latY * imageCoordinates.y +
-                            latXXY * Math.pow(imageCoordinates.x, 2) * imageCoordinates.y +
-                            latXYY * imageCoordinates.x * Math.pow(imageCoordinates.y, 2) +
-                            latXY * imageCoordinates.x * imageCoordinates.y +
+    final double x = imageCoordinates.x();
+    final double y = imageCoordinates.y();
+    final double latitude = latXXX * Math.pow(x, 3) +
+                            latXX * Math.pow(x, 2) +
+                            latX * x +
+                            latYYY * Math.pow(y, 3) +
+                            latYY * Math.pow(y, 2) +
+                            latY * y +
+                            latXXY * Math.pow(x, 2) * y +
+                            latXYY * x * Math.pow(y, 2) +
+                            latXY * x * y +
                             lat;
-    final double longitude = lonXXX * Math.pow(imageCoordinates.x, 3) +
-                             lonXX * Math.pow(imageCoordinates.x, 2) +
-                             lonX * imageCoordinates.x +
-                             lonYYY * Math.pow(imageCoordinates.y, 3) +
-                             lonYY * Math.pow(imageCoordinates.y, 2) +
-                             lonY * imageCoordinates.y +
-                             lonXXY * Math.pow(imageCoordinates.x, 2) * imageCoordinates.y +
-                             lonXYY * imageCoordinates.x * Math.pow(imageCoordinates.y, 2) +
-                             lonXY * imageCoordinates.x * imageCoordinates.y +
+    final double longitude = lonXXX * Math.pow(x, 3) +
+                             lonXX * Math.pow(x, 2) +
+                             lonX * x +
+                             lonYYY * Math.pow(y, 3) +
+                             lonYY * Math.pow(y, 2) +
+                             lonY * y +
+                             lonXXY * Math.pow(x, 2) * y +
+                             lonXYY * x * Math.pow(y, 2) +
+                             lonXY * x * y +
                              lon;
     return new Wgs84Coordinates(latitude + datumShift.north(), longitude + datumShift.east());
   }
@@ -241,8 +241,8 @@ public record GeoreferencingCoefficients(double eas,
    * @apiNote
    */
   public ImageCoordinates toImage(final Wgs84Coordinates wgs84Coordinates, final DatumShift datumShift) {
-    final double latitude = wgs84Coordinates.latitude - datumShift.north();
-    final double longitude = wgs84Coordinates.longitude - datumShift.east();
+    final double latitude = wgs84Coordinates.latitude() - datumShift.north();
+    final double longitude = wgs84Coordinates.longitude() - datumShift.east();
     final double y = norXXX * Math.pow(longitude, 3) +
                      norXX * Math.pow(longitude, 2) +
                      norX * longitude +
@@ -264,6 +264,85 @@ public record GeoreferencingCoefficients(double eas,
                      easXY * longitude * latitude +
                      eas;
     return new ImageCoordinates(y, x);
+  }
+
+  public static Wgs84Coordinates topLeftWgs84(final QctFile qctFile) {
+    return qctFile.georeferencingCoefficients()
+                  .toWgs84(new ImageCoordinates(0, 0), qctFile.metadata().extendedData().datumShift());
+  }
+
+  public static Wgs84Coordinates topRightWgs84(final QctFile qctFile) {
+    return qctFile.georeferencingCoefficients()
+                  .toWgs84(new ImageCoordinates(0, qctFile.widthPixels() - 1.0),
+                           qctFile.metadata().extendedData().datumShift());
+  }
+
+  public static Wgs84Coordinates bottomLeftWgs84(final QctFile qctFile) {
+    return qctFile.georeferencingCoefficients()
+                  .toWgs84(new ImageCoordinates(qctFile.heightPixels() - 1.0, 0),
+                           qctFile.metadata().extendedData().datumShift());
+  }
+
+  public static Wgs84Coordinates bottomRightWgs84(final QctFile qctFile) {
+    return qctFile.georeferencingCoefficients()
+                  .toWgs84(new ImageCoordinates(qctFile.heightPixels() - 1.0, qctFile.widthPixels() - 1.0),
+                           qctFile.metadata().extendedData().datumShift());
+  }
+
+  /**
+   * Computes an (approximate) {@link AffineTransform} from the georeferencing coefficients.
+   *
+   * @param qctFile of interest
+   * @return the computed {@link AffineTransform}
+   */
+  public static AffineTransform toApproximateAffineTransform(final QctFile qctFile) {
+    final DatumShift datumShift = qctFile.metadata().extendedData().datumShift();
+    final var centerImage = new ImageCoordinates((qctFile.heightPixels() - 1.0) / 2.0,
+                                                 (qctFile.widthPixels() - 1.0) / 2.0);
+    final var centerWgs84 = qctFile.georeferencingCoefficients().toWgs84(centerImage, datumShift);
+
+    final double xScale = qctFile.georeferencingCoefficients().lonX;
+    final double xRotation = qctFile.georeferencingCoefficients().lonY;
+    final double yRotation = qctFile.georeferencingCoefficients().latX;
+    final double yScale = qctFile.georeferencingCoefficients().latY;
+    final double xTranslation = centerWgs84.longitude() - (xScale * centerImage.x() + xRotation * centerImage.y());
+    final double yTranslation = centerWgs84.latitude() - (yRotation * centerImage.x() + yScale * centerImage.y());
+    final var affineTransformation = new AffineTransform(xScale,
+                                                         xRotation,
+                                                         yRotation,
+                                                         yScale,
+                                                         xTranslation,
+                                                         yTranslation);
+    logApproximateAffineTransformWarning(qctFile, affineTransformation);
+    return affineTransformation;
+  }
+
+  private static void logApproximateAffineTransformWarning(final QctFile qctFile,
+                                                           final AffineTransform affineTransformation) {
+    if (!LOG.isWarnEnabled()) return;
+    final double h = qctFile.heightPixels() - 1.0;
+    final double w = qctFile.widthPixels() - 1.0;
+    final var expectedTopLeftWgs84 = topLeftWgs84(qctFile);
+    final var expectedTopRightWgs84 = topRightWgs84(qctFile);
+    final var expectedBottomLeftWgs84 = bottomLeftWgs84(qctFile);
+    final var expectedBottomRightWgs84 = bottomRightWgs84(qctFile);
+
+    final Point2D topLeftWgs84 = affineTransformation.transform(new Point2D.Double(0, 0), new Point2D.Double());
+    final Point2D topRightWgs84 = affineTransformation.transform(new Point2D.Double(w, 0), new Point2D.Double());
+    final Point2D bottomLeftWgs84 = affineTransformation.transform(new Point2D.Double(0, h), new Point2D.Double());
+    final Point2D bottomRightWgs84 = affineTransformation.transform(new Point2D.Double(w, h), new Point2D.Double());
+
+    if (isDistorted(expectedTopLeftWgs84, topLeftWgs84) ||
+        isDistorted(expectedTopRightWgs84, topRightWgs84) ||
+        isDistorted(expectedBottomLeftWgs84, bottomLeftWgs84) ||
+        isDistorted(expectedBottomRightWgs84, bottomRightWgs84)) {
+      LOG.warn("Non-linear distortion detected, affine transformation will be inaccurate");
+    }
+  }
+
+  private static boolean isDistorted(final Wgs84Coordinates expectedWgs84Coordinates, final Point2D transformed) {
+    return (Math.abs(expectedWgs84Coordinates.latitude() - transformed.getY()) > 0.001) ||
+           (Math.abs(expectedWgs84Coordinates.longitude() - transformed.getX()) > 0.001);
   }
 
   public static final class Decoder {

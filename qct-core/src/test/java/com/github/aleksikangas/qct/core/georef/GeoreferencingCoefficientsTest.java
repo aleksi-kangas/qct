@@ -85,7 +85,7 @@ class GeoreferencingCoefficientsTest {
     void toWgs84() {
       final GeoreferencingCoefficients coefficients = createSimpleCoefficients();
       final var datumShift = new DatumShift(0, 0);
-      final var imageCoordinates = new GeoreferencingCoefficients.ImageCoordinates(2, 3);
+      final var imageCoordinates = new ImageCoordinates(2, 3);
 
       final var wgs84Coordinates = coefficients.toWgs84(imageCoordinates, datumShift);
 
@@ -97,7 +97,7 @@ class GeoreferencingCoefficientsTest {
     void toImage() {
       final GeoreferencingCoefficients coefficients = createSimpleCoefficients();
       final var datumShift = new DatumShift(0, 0);
-      final var wgs84Coordinates = new GeoreferencingCoefficients.Wgs84Coordinates(5, 1);
+      final var wgs84Coordinates = new Wgs84Coordinates(5, 1);
 
       final var imageCoordinates = coefficients.toImage(wgs84Coordinates, datumShift);
 
@@ -116,7 +116,7 @@ class GeoreferencingCoefficientsTest {
               0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0);
 
       final var datumShift = new DatumShift(0, 0);
-      final var imageCoordinates = new GeoreferencingCoefficients.ImageCoordinates(4.5, 2.5);
+      final var imageCoordinates = new ImageCoordinates(4.5, 2.5);
 
       final var wgs84Coordinates = coefficients.toWgs84(imageCoordinates, datumShift);
       final var resultImageCoordinates = coefficients.toImage(wgs84Coordinates, datumShift);
@@ -129,7 +129,7 @@ class GeoreferencingCoefficientsTest {
     void appliesDatumShift() {
       final GeoreferencingCoefficients coefficients = createSimpleCoefficients();
       final var datumShift = new DatumShift(10, 20);
-      final var imageCoordinates = new GeoreferencingCoefficients.ImageCoordinates(2, 3);
+      final var imageCoordinates = new ImageCoordinates(2, 3);
 
       final var wgs84Coordinates = coefficients.toWgs84(imageCoordinates, datumShift);
 

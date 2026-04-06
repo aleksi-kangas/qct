@@ -75,8 +75,16 @@ public record QctFile(Metadata metadata,
            "}";
   }
 
-  public int headerSize() {
+  public int headerSizeBytes() {
     return 0x45A0 + imageIndex.size();
+  }
+
+  public int heightPixels() {
+    return imageIndex.heightPixels();
+  }
+
+  public int widthPixels() {
+    return imageIndex.widthPixels();
   }
 
   public static final class Decoder {
@@ -145,7 +153,7 @@ public record QctFile(Metadata metadata,
         Files.createFile(writePath);
       }
       try (final var writeFileChannel = FileChannel.open(writePath, Set.of(StandardOpenOption.WRITE))) {
-        final var qctWriter = new QctWriter(writeFileChannel, qctFile.headerSize());
+        final var qctWriter = new QctWriter(writeFileChannel, qctFile.headerSizeBytes());
         QctFile.Encoder.encode(qctWriter, qctFile);
       }
     } catch (final IOException e) {

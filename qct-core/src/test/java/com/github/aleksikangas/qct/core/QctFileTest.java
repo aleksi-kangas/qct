@@ -30,7 +30,7 @@ class QctFileTest {
       final QctFile originalQctFile = QctFile.Decoder.decode(originalQctReader);
       final Path tempFile = Files.createTempFile("qct", ".bin");
       try (final var tempWriteFileChannel = FileChannel.open(tempFile, StandardOpenOption.WRITE)) {
-        final var tempQctWriter = new QctWriter(tempWriteFileChannel, originalQctFile.headerSize());
+        final var tempQctWriter = new QctWriter(tempWriteFileChannel, originalQctFile.headerSizeBytes());
         QctFile.Encoder.encode(tempQctWriter, originalQctFile);
       }
       try (final var tempReadFileChannel = FileChannel.open(tempFile, StandardOpenOption.READ)) {
