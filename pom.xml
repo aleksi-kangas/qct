@@ -41,6 +41,30 @@
         <url>https://github.com/aleksi-kangas/qct/actions</url>
     </ciManagement>
 
+    <repositories>
+        <repository>
+            <id>central</id>
+            <name>Maven Central</name>
+            <url>https://repo1.maven.org/maven2/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </repository>
+        <repository>
+            <id>osgeo</id>
+            <name>OSGeo Release Repository</name>
+            <url>https://repo.osgeo.org/repository/release/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </repository>
+    </repositories>
 
     <properties>
         <maven.compiler.source>25</maven.compiler.source>
@@ -49,7 +73,7 @@
     </properties>
 
     <modules>
+        <module>qct-convert</module>
         <module>qct-core</module>
     </modules>
-
 </project>

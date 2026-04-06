@@ -9,7 +9,7 @@
         <version>0.0.1</version>
     </parent>
 
-    <artifactId>qct-core</artifactId>
+    <artifactId>qct-convert</artifactId>
 
     <properties>
         <!-- Fallback in case @{argLine} is not replaced -->
@@ -44,7 +44,31 @@
         </plugins>
     </build>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.geotools</groupId>
+                <artifactId>gt-bom</artifactId>
+                <version>34.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
+        <dependency>
+            <groupId>com.github.aleksikangas</groupId>
+            <artifactId>qct-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Source: https://mvnrepository.com/artifact/ar.com.hjg/pngj -->
+        <dependency>
+            <groupId>ar.com.hjg</groupId>
+            <artifactId>pngj</artifactId>
+            <version>2.1.0</version>
+        </dependency>
         <!-- Source: https://mvnrepository.com/artifact/com.github.spotbugs/spotbugs-annotations -->
         <dependency>
             <groupId>com.github.spotbugs</groupId>
@@ -56,6 +80,11 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>33.5.0-jre</version>
+        </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/org.geotools/gt-image -->
+        <dependency>
+            <groupId>org.geotools</groupId>
+            <artifactId>gt-coverage</artifactId>
         </dependency>
         <!-- Source: https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
         <dependency>
@@ -91,4 +120,5 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
 </project>
