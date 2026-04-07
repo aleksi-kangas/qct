@@ -45,12 +45,11 @@ class SubPaletteTest {
     @Test
     void constructor() {
       final int[] indices = { 5, 10, 42 };
-      final var subPalette = new SubPalette(Encoding.RUN_LENGTH_ENCODING, 3, indices);
+      final var subPalette = new SubPalette(Encoding.RUN_LENGTH_ENCODING, indices);
 
       assertEquals(Encoding.RUN_LENGTH_ENCODING, subPalette.encoding());
       assertEquals(3, subPalette.size());
       assertArrayEquals(indices, subPalette.paletteIndices());
-      assertThrows(IllegalStateException.class, () -> new SubPalette(Encoding.RUN_LENGTH_ENCODING, 5, indices));
     }
 
     @Test
@@ -59,10 +58,10 @@ class SubPaletteTest {
       final int[] indices2 = { 0, 5, 10 };
       final int[] indices3 = { 0, 5, 11 };
 
-      final var a = new SubPalette(Encoding.RUN_LENGTH_ENCODING, 3, indices1);
-      final var b = new SubPalette(Encoding.RUN_LENGTH_ENCODING, 3, indices2);
-      final var c = new SubPalette(Encoding.RUN_LENGTH_ENCODING, 3, indices3);
-      final var d = new SubPalette(Encoding.PIXEL_PACKING, 3, indices1);
+      final var a = new SubPalette(Encoding.RUN_LENGTH_ENCODING, indices1);
+      final var b = new SubPalette(Encoding.RUN_LENGTH_ENCODING, indices2);
+      final var c = new SubPalette(Encoding.RUN_LENGTH_ENCODING, indices3);
+      final var d = new SubPalette(Encoding.PIXEL_PACKING, indices1);
 
       assertEquals(a, b);
       assertNotEquals(a, c);
@@ -72,9 +71,8 @@ class SubPaletteTest {
 
     @Test
     void toStringContainsEssentialInfo() {
-      final var subPalette = new SubPalette(Encoding.RUN_LENGTH_ENCODING, 2, new int[]{ 7, 15 });
+      final var subPalette = new SubPalette(Encoding.RUN_LENGTH_ENCODING, new int[]{ 7, 15 });
       final String str = subPalette.toString();
-      assertTrue(str.contains("size=2"));
       assertTrue(str.contains("paletteIndices=[7, 15]"));
     }
   }
@@ -84,29 +82,29 @@ class SubPaletteTest {
   class HelperMethodTests {
     @Test
     void sizeByteForRunLengthEncoding() {
-      final var subPalette = new SubPalette(Encoding.RUN_LENGTH_ENCODING, 42, new int[42]);
+      final var subPalette = new SubPalette(Encoding.RUN_LENGTH_ENCODING, new int[42]);
       assertEquals(42, subPalette.sizeByte());
     }
 
     @Test
     void sizeByteForPixelPacking() {
-      final var subPalette = new SubPalette(Encoding.PIXEL_PACKING, 100, new int[100]);
+      final var subPalette = new SubPalette(Encoding.PIXEL_PACKING, new int[100]);
       assertEquals(256 - 100, subPalette.sizeByte());
     }
 
     @Test
     void bitsRequiredToIndex() {
-      assertEquals(0, new SubPalette(Encoding.RUN_LENGTH_ENCODING, 0, new int[0]).bitsRequiredToIndex());
-      assertEquals(1, new SubPalette(Encoding.RUN_LENGTH_ENCODING, 1, new int[]{ 0 }).bitsRequiredToIndex());
-      assertEquals(1, new SubPalette(Encoding.RUN_LENGTH_ENCODING, 2, new int[]{ 0, 1 }).bitsRequiredToIndex());
-      assertEquals(3, new SubPalette(Encoding.RUN_LENGTH_ENCODING, 5, new int[5]).bitsRequiredToIndex());
-      assertEquals(8, new SubPalette(Encoding.RUN_LENGTH_ENCODING, 200, new int[200]).bitsRequiredToIndex());
+      assertEquals(0, new SubPalette(Encoding.RUN_LENGTH_ENCODING, new int[0]).bitsRequiredToIndex());
+      assertEquals(1, new SubPalette(Encoding.RUN_LENGTH_ENCODING, new int[]{ 0 }).bitsRequiredToIndex());
+      assertEquals(1, new SubPalette(Encoding.RUN_LENGTH_ENCODING, new int[]{ 0, 1 }).bitsRequiredToIndex());
+      assertEquals(3, new SubPalette(Encoding.RUN_LENGTH_ENCODING, new int[5]).bitsRequiredToIndex());
+      assertEquals(8, new SubPalette(Encoding.RUN_LENGTH_ENCODING, new int[200]).bitsRequiredToIndex());
     }
 
     @Test
     void paletteIndexOf() {
       final int[] indices = { 10, 20, 30 };
-      final var subPalette = new SubPalette(Encoding.RUN_LENGTH_ENCODING, 3, indices);
+      final var subPalette = new SubPalette(Encoding.RUN_LENGTH_ENCODING, indices);
       assertEquals(10, subPalette.paletteIndexOf(0));
       assertEquals(20, subPalette.paletteIndexOf(1));
       assertEquals(30, subPalette.paletteIndexOf(2));
@@ -115,7 +113,7 @@ class SubPaletteTest {
     @Test
     void subPaletteIndexOf() {
       final int[] indices = { 10, 20, 30 };
-      final var subPalette = new SubPalette(Encoding.RUN_LENGTH_ENCODING, 3, indices);
+      final var subPalette = new SubPalette(Encoding.RUN_LENGTH_ENCODING, indices);
       assertEquals(0, subPalette.subPaletteIndexOf(10));
       assertEquals(1, subPalette.subPaletteIndexOf(20));
       assertEquals(2, subPalette.subPaletteIndexOf(30));
@@ -123,7 +121,7 @@ class SubPaletteTest {
 
     @Test
     void subPaletteIndexOfNotFound() {
-      final var subPalette = new SubPalette(Encoding.RUN_LENGTH_ENCODING, 3, new int[]{ 10, 20, 30 });
+      final var subPalette = new SubPalette(Encoding.RUN_LENGTH_ENCODING, new int[]{ 10, 20, 30 });
       assertThrows(IllegalArgumentException.class, () -> subPalette.subPaletteIndexOf(999));
     }
   }
@@ -179,7 +177,7 @@ class SubPaletteTest {
       final ImageTile tile = createTestImageTile(Encoding.RUN_LENGTH_ENCODING,
                                                  new int[][]{ { 0, 5, 0 }, { 5, 10, 5 } });
 
-      SubPalette.Encoder.encode(qctWriter, tile, 200);
+      SubPalette.Encoder.encode(qctWriter, tile, Encoding.RUN_LENGTH_ENCODING, 200);
       final SubPalette decodedSubPalette = SubPalette.Decoder.decode(qctReader, Encoding.RUN_LENGTH_ENCODING, 200);
 
       assertEquals(3, decodedSubPalette.size()); // 0,5,10
@@ -196,7 +194,10 @@ class SubPaletteTest {
                                                          createUniformTileData(0, 1, 2, 3));
 
       final int byteOffset = 150;
-      final SubPalette writtenSubPalette = SubPalette.Encoder.encode(qctWriter, originalTile, byteOffset);
+      final SubPalette writtenSubPalette = SubPalette.Encoder.encode(qctWriter,
+                                                                     originalTile,
+                                                                     Encoding.RUN_LENGTH_ENCODING,
+                                                                     byteOffset);
       final SubPalette readSubPalette = SubPalette.Decoder.decode(qctReader, Encoding.RUN_LENGTH_ENCODING, byteOffset);
 
       assertEquals(writtenSubPalette, readSubPalette);

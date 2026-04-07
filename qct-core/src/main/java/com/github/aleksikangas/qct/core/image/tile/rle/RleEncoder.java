@@ -41,7 +41,7 @@ public final class RleEncoder {
 
     @Override
     public int sizeBytes() {
-      return subPalette.size() + pixelBytes.length;
+      return subPalette.sizeBytes() + pixelBytes.length;
     }
 
     @Override
@@ -80,7 +80,7 @@ public final class RleEncoder {
 
     public static Candidate of(final ImageTile imageTile) {
       final int[][] paletteIndices = imageTile.paletteIndices();
-      final SubPalette subPalette = SubPalette.of(imageTile);
+      final SubPalette subPalette = SubPalette.forRunLengthEncoding(imageTile);
       final int[] bytes = encodePixelData(subPalette, paletteIndices);
       return new Candidate(subPalette, bytes);
     }

@@ -21,8 +21,8 @@ public record RleByte(int paletteIndex,
   public static RleByte decode(final SubPalette subPalette, final int rleRawByte) {
     final int subPaletteIndexMask = (1 << subPalette.bitsRequiredToIndex()) - 1;
     final int subPaletteIndex = rleRawByte & subPaletteIndexMask;
-    final int rumLength = rleRawByte >> subPalette.bitsRequiredToIndex();
-    return new RleByte(subPalette.paletteIndexOf(subPaletteIndex), rumLength);
+    final int runLength = rleRawByte >> subPalette.bitsRequiredToIndex();
+    return new RleByte(subPalette.paletteIndexOf(subPaletteIndex), runLength);
   }
 
   public static int encode(final SubPalette subPalette, final RleByte rleByte) {

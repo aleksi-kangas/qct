@@ -9,6 +9,7 @@ import com.github.aleksikangas.qct.core.image.tile.ImageTile;
 import com.github.aleksikangas.qct.core.image.tile.ImageTile.Encoding;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
@@ -21,58 +22,50 @@ import java.util.Set;
  * Sub-palette containing indices to the main {@link Palette}, used in tiles with {@link Encoding#PIXEL_PACKING} and
  * {@link Encoding#RUN_LENGTH_ENCODING}.
  *
- * @param encoding       encoding of the tile using the sub-palette
- * @param size           size of the sub-palette
+ * @param encoding       encoding of the tile using the sub-palette, either {@link Encoding#PIXEL_PACKING} or
+ *                       {@link Encoding#RUN_LENGTH_ENCODING}
  * @param paletteIndices indices pointing to the main {@link Palette}
  */
 public record SubPalette(Encoding encoding,
-                         int size,
                          int[] paletteIndices) {
-  public SubPalette {
-    Objects.requireNonNull(encoding);
-    Objects.requireNonNull(paletteIndices);
-    Preconditions.checkState(paletteIndices.length == size);
-  }
-
-  public static SubPalette of(final ImageTile imageTile) {
-    final Set<Integer> uniquePaletteIndices = new LinkedHashSet<>();
-    for (int y = 0; y < ImageTile.HEIGHT; ++y) {
-      for (int x = 0; x < ImageTile.WIDTH; ++x) {
-        uniquePaletteIndices.add(imageTile.paletteIndices()[y][x]);
-      }
-    }
-    Preconditions.checkState(!uniquePaletteIndices.isEmpty());
-
-    final int size = uniquePaletteIndices.size();
-    final int[] paletteIndices = uniquePaletteIndices.stream().mapToInt(Integer::intValue).toArray();
-    Arrays.sort(paletteIndices);
-    return new SubPalette(imageTile.encoding(), size, paletteIndices);
+  public SubPalette(final Encoding encoding, final int[] paletteIndices) {
+    this.encoding = Objects.requireNonNull(encoding);
+    this.paletteIndices = Objects.requireNonNull(paletteIndices);
+    Preconditions.checkArgument(encoding == Encoding.PIXEL_PACKING || encoding == Encoding.RUN_LENGTH_ENCODING);
   }
 
   @Override
   public boolean equals(final Object o) {
     if (o == null || getClass() != o.getClass()) return false;
     final SubPalette that = (SubPalette) o;
-    return size == that.size && encoding == that.encoding && Objects.deepEquals(paletteIndices, that.paletteIndices);
+    return encoding == that.encoding && Objects.deepEquals(paletteIndices, that.paletteIndices);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(encoding, size, Arrays.hashCode(paletteIndices));
+    return Objects.hash(encoding, Arrays.hashCode(paletteIndices));
   }
 
   @Nonnull
   @Override
   public String toString() {
-    return "SubPalette{" + "size=" + size + ", paletteIndices=" + Arrays.toString(paletteIndices) + '}';
+    return "SubPalette{" + "encoding=" + encoding + ", paletteIndices=" + Arrays.toString(paletteIndices) + '}';
+  }
+
+  public int size() {
+    return paletteIndices.length;
   }
 
   public int sizeByte() {
     return switch (encoding) {
-      case RUN_LENGTH_ENCODING -> size;
-      case PIXEL_PACKING -> 256 - size;
+      case RUN_LENGTH_ENCODING -> size();
+      case PIXEL_PACKING -> 256 - size();
       default -> throw new IllegalStateException("Unsupported encoding " + encoding);
     };
+  }
+
+  public int sizeBytes() {
+    return 0x01 + size();
   }
 
   /**
@@ -81,9 +74,9 @@ public record SubPalette(Encoding encoding,
    * @return the number of bits required to index the sub-palette
    */
   public int bitsRequiredToIndex() {
-    if (size == 0) return 0;
-    if (size == 1) return 1;
-    return (int) Math.ceil((Math.log(size) / Math.log(2)));
+    if (size() == 0) return 0;
+    if (size() == 1) return 1;
+    return (int) Math.ceil((Math.log(size()) / Math.log(2)));
   }
 
   /**
@@ -97,12 +90,34 @@ public record SubPalette(Encoding encoding,
   }
 
   public int subPaletteIndexOf(final int mainPaletteIndex) {
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < size(); i++) {
       if (paletteIndices[i] == mainPaletteIndex) {
         return i;
       }
     }
     throw new IllegalArgumentException("Palette index " + mainPaletteIndex + " not found in sub-palette");
+  }
+
+  public static SubPalette forPixelPacking(final ImageTile imageTile) {
+    return forEncoding(imageTile, Encoding.PIXEL_PACKING);
+  }
+
+  public static SubPalette forRunLengthEncoding(final ImageTile imageTile) {
+    return forEncoding(imageTile, Encoding.RUN_LENGTH_ENCODING);
+  }
+
+  private static SubPalette forEncoding(final ImageTile imageTile, final Encoding encoding) {
+    final Set<Integer> uniquePaletteIndices = new LinkedHashSet<>();
+    for (int y = 0; y < ImageTile.HEIGHT; ++y) {
+      for (int x = 0; x < ImageTile.WIDTH; ++x) {
+        uniquePaletteIndices.add(imageTile.paletteIndices()[y][x]);
+      }
+    }
+    Preconditions.checkState(!uniquePaletteIndices.isEmpty());
+
+    final int[] paletteIndices = uniquePaletteIndices.stream().mapToInt(Integer::intValue).toArray();
+    Arrays.sort(paletteIndices);
+    return new SubPalette(encoding, paletteIndices);
   }
 
   public static final class Decoder {
@@ -113,7 +128,7 @@ public record SubPalette(Encoding encoding,
         default -> throw new IllegalStateException("Unsupported encoding " + encoding);
       };
       final int[] paletteIndices = qctReader.readBytes(byteOffset + 0x01, size);
-      return new SubPalette(encoding, size, paletteIndices);
+      return new SubPalette(encoding, paletteIndices);
     }
 
     private Decoder() {
@@ -126,8 +141,12 @@ public record SubPalette(Encoding encoding,
       qctWriter.writeBytes(byteOffset + 0x01, subPalette.paletteIndices());
     }
 
-    public static SubPalette encode(final QctWriter qctWriter, final ImageTile imageTile, final int byteOffset) {
-      final var subPalette = SubPalette.of(imageTile);
+    @VisibleForTesting
+    static SubPalette encode(final QctWriter qctWriter,
+                             final ImageTile imageTile,
+                             final Encoding encoding,
+                             final int byteOffset) {
+      final var subPalette = SubPalette.forEncoding(imageTile, encoding);
       encode(qctWriter, subPalette, byteOffset);
       return subPalette;
     }
