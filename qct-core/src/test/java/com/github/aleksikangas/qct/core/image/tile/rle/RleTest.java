@@ -32,7 +32,7 @@ class RleTest {
     tempFile = Files.createTempFile("rle-tile", ".bin");
     fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE);
     qctReader = new DirectQctReader(fileChannel);
-    qctWriter = new QctWriter(fileChannel, 8192);
+    qctWriter = new QctWriter(fileChannel, 0);
   }
 
   @AfterEach
@@ -47,9 +47,8 @@ class RleTest {
     @Test
     void encodeAndDecodeSimpleRun() {
       final var originalImageTile = new ImageTile(Encoding.RUN_LENGTH_ENCODING, createUniformTile(42));
-      final int byteOffset = 0;
-      RleEncoder.encode(qctWriter, originalImageTile, byteOffset);
-      final ImageTile decodedImageTile = RleDecoder.decode(qctReader, byteOffset);
+      RleEncoder.encode(qctWriter, originalImageTile, 0);
+      final ImageTile decodedImageTile = RleDecoder.decode(qctReader, 0);
       assertEquals(Encoding.RUN_LENGTH_ENCODING, decodedImageTile.encoding());
       assertArrayEquals(originalImageTile.paletteIndices(), decodedImageTile.paletteIndices());
     }
@@ -63,9 +62,8 @@ class RleTest {
         }
       }
       final var originalImageTile = new ImageTile(Encoding.RUN_LENGTH_ENCODING, data);
-      final int byteOffset = 100;
-      RleEncoder.encode(qctWriter, originalImageTile, byteOffset);
-      final ImageTile decodedImageTile = RleDecoder.decode(qctReader, byteOffset);
+      RleEncoder.encode(qctWriter, originalImageTile, 0);
+      final ImageTile decodedImageTile = RleDecoder.decode(qctReader, 0);
       assertEquals(originalImageTile, decodedImageTile);
     }
 
@@ -84,9 +82,8 @@ class RleTest {
         data[y][x] = 15;
       }
       final var originalImageTile = new ImageTile(Encoding.RUN_LENGTH_ENCODING, data);
-      final int byteOffset = 200;
-      RleEncoder.encode(qctWriter, originalImageTile, byteOffset);
-      final ImageTile decodedImageTile = RleDecoder.decode(qctReader, byteOffset);
+      RleEncoder.encode(qctWriter, originalImageTile, 0);
+      final ImageTile decodedImageTile = RleDecoder.decode(qctReader, 0);
       assertEquals(originalImageTile, decodedImageTile);
     }
 
@@ -94,9 +91,8 @@ class RleTest {
     void roundTripWithSubPaletteOfSize4() {
       final int[][] data = createTileWithValues(10, 20, 30, 40);
       final var originalImageTile = new ImageTile(Encoding.RUN_LENGTH_ENCODING, data);
-      final int byteOffset = 300;
-      RleEncoder.encode(qctWriter, originalImageTile, byteOffset);
-      final ImageTile decodedImageTile = RleDecoder.decode(qctReader, byteOffset);
+      RleEncoder.encode(qctWriter, originalImageTile, 0);
+      final ImageTile decodedImageTile = RleDecoder.decode(qctReader, 0);
       assertEquals(originalImageTile, decodedImageTile);
     }
 
@@ -110,9 +106,8 @@ class RleTest {
         }
       }
       final var originalImageTile = new ImageTile(Encoding.RUN_LENGTH_ENCODING, data);
-      final int byteOffset = 400;
-      RleEncoder.encode(qctWriter, originalImageTile, byteOffset);
-      final ImageTile decodedImageTile = RleDecoder.decode(qctReader, byteOffset);
+      RleEncoder.encode(qctWriter, originalImageTile, 0);
+      final ImageTile decodedImageTile = RleDecoder.decode(qctReader, 0);
       assertEquals(originalImageTile, decodedImageTile);
     }
   }
@@ -139,8 +134,8 @@ class RleTest {
 
       ImageTile original = new ImageTile(Encoding.RUN_LENGTH_ENCODING, data);
 
-      RleEncoder.encode(qctWriter, original, 50);
-      ImageTile decoded = RleDecoder.decode(qctReader, 50);
+      RleEncoder.encode(qctWriter, original, 0);
+      ImageTile decoded = RleDecoder.decode(qctReader, 0);
 
       assertEquals(original, decoded);
     }
