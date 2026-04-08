@@ -6,137 +6,83 @@ package com.github.aleksikangas.qct.core.image.tile.huffman;
 
 
 import com.github.aleksikangas.qct.core.color.Palette;
-import com.github.aleksikangas.qct.core.exception.QctRuntimeException;
 import com.github.aleksikangas.qct.core.utils.QctByteStream;
+import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * A Huffman Codebook which resembles a Huffman tree.
+ */
 public final class HuffmanCodeBook {
-  private final List<Integer> bytes = new ArrayList<>(256);
-  private int pointer = 0;
+  private final HuffmanTreeNode root;
 
-  public HuffmanCodeBook(final QctByteStream qctByteStream) {
-    int colorCount = 0;
-    int branchCount = 0;
-    while (colorCount <= branchCount) {
-      bytes.add(qctByteStream.nextByte());
-      if (isFarBranch(size() - 1)) {
-        bytes.add(qctByteStream.nextByte());
-        bytes.add(qctByteStream.nextByte());
-        ++branchCount;
-      } else if (isNearBranch(size() - 1)) {
-        ++branchCount;
-      } else {
-        ++colorCount;
-      }
+  HuffmanCodeBook(final HuffmanTreeNode root) {
+    this.root = Objects.requireNonNull(root);
+  }
+
+  HuffmanTreeNode getRoot() {
+    return root;
+  }
+
+  boolean isSingleColor() {
+    return root instanceof HuffmanTreeNode.LeafNode;
+  }
+
+  int getSinglePaletteIndex() {
+    Preconditions.checkState(isSingleColor(), "Not a single-color codebook");
+    return ((HuffmanTreeNode.LeafNode) root).paletteIndex();
+  }
+
+  List<Integer> toBytes() {
+    return encodeTreeRecursive(root);
+  }
+
+  public static HuffmanCodeBook from(final QctByteStream qctByteStream) {
+    final HuffmanTreeNode root = decodeTreeRecursive(qctByteStream);
+    return new HuffmanCodeBook(root);
+  }
+
+  private static HuffmanTreeNode decodeTreeRecursive(final QctByteStream stream) {
+    final int currentByte = stream.nextByte();
+    if (currentByte < 128) {  // Leaf
+      Objects.checkIndex(currentByte, Palette.SIZE);
+      return new HuffmanTreeNode.LeafNode(0, currentByte);
     }
-    if (!isValid()) {
-      throw new QctRuntimeException("Invalid Huffman Code Book");
+    final HuffmanTreeNode left;
+    final HuffmanTreeNode right;
+    if (currentByte == 128) {  // Far branch (skip the two offset bytes)
+      stream.skip(2);
     }
+    left = decodeTreeRecursive(stream);
+    right = decodeTreeRecursive(stream);
+    return new HuffmanTreeNode.ParentNode(0, left, right);
   }
 
-  int size() {
-    return bytes.size();
-  }
-
-  boolean isColor() {
-    return isColor(pointer);
-  }
-
-  boolean isColor(final int node) {
-    return bytes.get(node) < 128;
-  }
-
-  boolean isFarBranch() {
-    return isFarBranch(pointer);
-  }
-
-  boolean isFarBranch(final int node) {
-    return bytes.get(node) == 128;
-  }
-
-  boolean isNearBranch() {
-    return isNearBranch(pointer);
-  }
-
-  boolean isNearBranch(final int node) {
-    return bytes.get(node) > 128;
-  }
-
-  int getPaletteIndex() {
-    return getPaletteIndex(pointer);
-  }
-
-  int getPaletteIndex(final int node) {
-    if (!isColor(node)) {
-      throw new IllegalStateException("Attempting to get color in a non-color node");
-    }
-    final int paletteIndex = bytes.get(node);
-    Objects.checkIndex(paletteIndex, Palette.SIZE);
-    return paletteIndex;
-  }
-
-  void step(final boolean bit) {
-    if (bit) {  // Right -> Jump
-      if (isNearBranch()) {
-        pointer += nearBranchJumpSize(pointer);
-      } else if (isFarBranch()) {
-        pointer += farBranchJumpSize(pointer);
-      } else {
-        throw new IllegalStateException("Attempting to step in a non-branch node");
-      }
-    } else {
-      if (isNearBranch()) {
-        ++pointer;
-      } else if (isFarBranch()) {
-        pointer += 3;
-      } else {
-        throw new IllegalStateException("Attempting to step in a non-branch node");
-      }
-    }
-  }
-
-  void reset() {
-    pointer = 0;
-  }
-
-  private int farBranchJumpSize(final int node) {
-    return 65537 - (256 * bytes.get(node + 2) + bytes.get(node + 1)) + 2;
-  }
-
-  private int nearBranchJumpSize(final int node) {
-    return 257 - bytes.get(node);
-  }
-
-  private boolean isValid() {
-    if (size() == 0) {
-      return false;
-    }
-    if (size() == 1) {
-      return true;
-    }
-    for (int i = 0; i < size(); ++i) {
-      if (isColor(i)) {
-        continue;
-      }
-      if (isFarBranch(i)) {
-        if (i + 2 >= size()) {
-          return false;
+  private static List<Integer> encodeTreeRecursive(final HuffmanTreeNode node) {
+    return switch (node) {
+      case HuffmanTreeNode.ParentNode parentNode -> {
+        final List<Integer> bytes = new ArrayList<>();
+        final List<Integer> leftBytes = encodeTreeRecursive(parentNode.left());
+        final List<Integer> rightBytes = encodeTreeRecursive(parentNode.right());
+        final int leftSize = leftBytes.size();
+        final int jumpAfterHeader = 1 + leftSize;   // 1 for the branch byte itself
+        if (jumpAfterHeader <= 127) {  // Near branch
+          final int branchByte = 257 - jumpAfterHeader;
+          bytes.add(branchByte);
+        } else {  // Far branch
+          bytes.add(128);
+          final int offset = 65537 - jumpAfterHeader;
+          bytes.add(offset);
+          bytes.add((offset >> 8));
         }
-        if (i + farBranchJumpSize(i) >= size()) {
-          return false;
-        }
-        i += 2;
-      } else if (isNearBranch(i)) {
-        if (i + nearBranchJumpSize(i) >= size()) {
-          return false;
-        }
-      } else {
-        return false;
+        bytes.addAll(leftBytes);
+        bytes.addAll(rightBytes);
+        yield bytes;
       }
-    }
-    return true;
+      case HuffmanTreeNode.LeafNode leafNode -> List.of(leafNode.paletteIndex());
+    };
   }
 }

@@ -21,23 +21,21 @@ public final class HuffmanEncoder {
   /**
    * A candidate for {@link ImageTile} encoding.
    *
-   * @param encoding   {@link ImageTile.Encoding#HUFFMAN_CODING}
    * @param pixelBytes pixel data bytes
    */
-  public record Candidate(ImageTile.Encoding encoding,
-                          int[] pixelBytes) implements ImageTileEncodingCandidate {
-    public Candidate(final int[] pixelBytes) {
-      this(ImageTile.Encoding.HUFFMAN_CODING, pixelBytes);
-    }
-
+  public record Candidate(int[] pixelBytes) implements ImageTileEncodingCandidate {
     public Candidate {
-      Objects.requireNonNull(encoding);
       Objects.requireNonNull(pixelBytes);
     }
 
     @Override
+    public ImageTile.Encoding encoding() {
+      return ImageTile.Encoding.HUFFMAN_CODING;
+    }
+
+    @Override
     public int sizeBytes() {
-      return pixelBytes.length;
+      return 0x01 + pixelBytes.length;
     }
 
     @Override
@@ -50,23 +48,18 @@ public final class HuffmanEncoder {
     public boolean equals(final Object o) {
       if (o == null || getClass() != o.getClass()) return false;
       final Candidate candidate = (Candidate) o;
-      return Objects.deepEquals(pixelBytes, candidate.pixelBytes) && encoding == candidate.encoding;
+      return Objects.deepEquals(pixelBytes, candidate.pixelBytes);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(encoding, Arrays.hashCode(pixelBytes));
+      return Arrays.hashCode(pixelBytes);
     }
 
     @Nonnull
     @Override
     public String toString() {
-      return "RleImageTileEncodingCandidate{" +
-             "encoding=" +
-             encoding +
-             ", pixelBytes=" +
-             Arrays.toString(pixelBytes) +
-             '}';
+      return "Candidate{" + "pixelBytes=" + Arrays.toString(pixelBytes) + '}';
     }
 
     public static Candidate of(final ImageTile imageTile) {
@@ -74,116 +67,57 @@ public final class HuffmanEncoder {
       final int[] frequencies = new int[Palette.SIZE];
       for (int y = 0; y < ImageTile.HEIGHT; ++y) {
         for (int x = 0; x < ImageTile.WIDTH; ++x) {
-          final int idx = paletteIndices[y][x];
-          ++frequencies[idx];
+          ++frequencies[paletteIndices[y][x]];
         }
       }
-      final HuffmanTreeNode root = buildHuffmanTree(frequencies);
-      // Build the compact codebook (the exact linear format expected by HuffmanCodeBook)
-      final List<Integer> codebookList = recursiveSerializeTree(root);
-
-      // Build variable-length codes (0 = continue/inline = left child, 1 = jump = right child)
-      final Map<Integer, List<Boolean>> codes = buildCodes(root);
-
-      // Generate the raw bit stream in the exact order the decoder expects
-      // (sequential row-major order matching HuffmanDecoder.decodeComplex)
+      final HuffmanTreeNode rootNode = buildHuffmanTree(frequencies);
+      final HuffmanCodeBook codeBook = new HuffmanCodeBook(rootNode);
+      final List<Integer> codebookBytes = codeBook.toBytes();
+      final Map<Integer, List<Boolean>> codes = buildCodes(rootNode);
       final List<Boolean> allBits = new ArrayList<>();
       for (int y = 0; y < ImageTile.HEIGHT; ++y) {
         for (int x = 0; x < ImageTile.WIDTH; ++x) {
-          final int pidx = paletteIndices[y][x];
-          final List<Boolean> codeBits = codes.get(pidx);
-          if (codeBits == null) {
-            throw new IllegalStateException("Missing Huffman code for palette index " + pidx);
-          }
-          allBits.addAll(codeBits);
+          allBits.addAll(codes.get(paletteIndices[y][x]));
+        }
+      }
+      final int numBytes = (allBits.size() + 7) / 8;
+      final int[] bitstream = new int[numBytes];
+      for (int i = 0; i < allBits.size(); i++) {
+        if (Boolean.TRUE.equals(allBits.get(i))) {
+          bitstream[i / 8] |= (1 << (i % 8));
         }
       }
 
-      // Pack bits into bytes (LSB-first, exactly as consumed by the decoder)
-      final int numBitstreamBytes = (allBits.size() + 7) / 8;
-      final int[] bitstream = new int[numBitstreamBytes];
-      int bitIndex = 0;
-      for (int b = 0; b < numBitstreamBytes; ++b) {
-        int byteVal = 0;
-        for (int i = 0; i < 8 && bitIndex < allBits.size(); ++i, ++bitIndex) {
-          if (Boolean.TRUE.equals(allBits.get(bitIndex))) {
-            byteVal |= (1 << i);   // bit 0 of the stream goes into LSB of the byte
-          }
-        }
-        bitstream[b] = byteVal;
+      // 7. Combine codebook + bitstream
+      final int[] pixelBytes = new int[codebookBytes.size() + bitstream.length];
+      for (int i = 0; i < codebookBytes.size(); i++) {
+        pixelBytes[i] = codebookBytes.get(i);
       }
+      System.arraycopy(bitstream, 0, pixelBytes, codebookBytes.size(), bitstream.length);
 
-      // pixelBytes = codebook bytes immediately followed by bit-stream bytes
-      // (for blank/single-colour tiles the bit-stream is empty, as required by the spec)
-      final int[] pixelBytesArr = new int[codebookList.size() + bitstream.length];
-      for (int i = 0; i < codebookList.size(); ++i) {
-        pixelBytesArr[i] = codebookList.get(i);
-      }
-      System.arraycopy(bitstream, 0, pixelBytesArr, codebookList.size(), bitstream.length);
-
-      return new Candidate(pixelBytesArr);
+      return new Candidate(pixelBytes);
     }
   }
 
   private static HuffmanTreeNode buildHuffmanTree(final int[] frequencies) {
     final PriorityQueue<HuffmanTreeNode> pq = new PriorityQueue<>(Comparator.comparingInt(HuffmanTreeNode::frequency));
-    for (int i = 0; i < Palette.SIZE; ++i) {
+
+    for (int i = 0; i < Palette.SIZE; i++) {
       if (frequencies[i] > 0) {
         pq.add(new HuffmanTreeNode.LeafNode(frequencies[i], i));
       }
     }
-    if (pq.isEmpty()) {
-      throw new IllegalArgumentException("Tile contains no colours");
-    }
-    if (pq.size() == 1) {
-      return pq.poll(); // single color tile (blank tile)
-    }
+
+    if (pq.isEmpty()) throw new IllegalArgumentException("Tile contains no colours");
+    if (pq.size() == 1) return pq.poll();
+
     while (pq.size() > 1) {
-      final HuffmanTreeNode left = pq.poll();
-      final HuffmanTreeNode right = pq.poll();
-      // Left = continue (bit 0), right = jump (bit 1). The exact assignment of children does not
-      // affect code lengths (Huffman guarantees optimality) but determines the concrete bit values.
-      final HuffmanTreeNode parent = new HuffmanTreeNode.ParentNode(Objects.requireNonNull(left).frequency() +
-                                                                    Objects.requireNonNull(right).frequency(),
-                                                                    left,
-                                                                    right);
-      pq.add(parent);
+      HuffmanTreeNode left = pq.poll();
+      HuffmanTreeNode right = pq.poll();
+      pq.add(new HuffmanTreeNode.ParentNode(Objects.requireNonNull(left).frequency() +
+                                            Objects.requireNonNull(right).frequency(), left, right));
     }
     return pq.poll();
-  }
-
-  private static List<Integer> recursiveSerializeTree(final HuffmanTreeNode node) {
-    return switch (node) {
-      case HuffmanTreeNode.ParentNode parentNode -> {
-        // Recursively serialize both children first, in order to compute the jump
-        final List<Integer> leftBytes = recursiveSerializeTree(parentNode.left());
-        final List<Integer> rightBytes = recursiveSerializeTree(parentNode.right());
-
-        // Is this a near or far branch?
-        final int tentativeBranchSize = 1;
-        final int tentativeRelativeJump = tentativeBranchSize + leftBytes.size();
-        final boolean isNearBranch = tentativeRelativeJump <= 127;
-        final int branchSize = isNearBranch ? 1 : 3;
-        final int relativeJump = branchSize + leftBytes.size();
-
-        final List<Integer> subTreeBytes = new ArrayList<>();
-        if (isNearBranch) {
-          final int bn = 257 - relativeJump;
-          subTreeBytes.add(bn);
-        } else {
-          subTreeBytes.add(128);  // far branch marker
-          final int temp = 65539 - relativeJump;
-          final int b1 = temp & 0xFF;
-          final int b2 = (temp >> 8) & 0xFF;
-          subTreeBytes.add(b1);
-          subTreeBytes.add(b2);
-        }
-        subTreeBytes.addAll(leftBytes);
-        subTreeBytes.addAll(rightBytes);
-        yield subTreeBytes;
-      }
-      case HuffmanTreeNode.LeafNode leafNode -> List.of(leafNode.paletteIndex());
-    };
   }
 
   private static Map<Integer, List<Boolean>> buildCodes(final HuffmanTreeNode root) {
@@ -193,21 +127,20 @@ public final class HuffmanEncoder {
   }
 
   private static void buildCodesRecursive(final HuffmanTreeNode node,
-                                          final List<Boolean> currentCode,
+                                          final List<Boolean> current,
                                           final Map<Integer, List<Boolean>> codes) {
-    switch (node) {
-      case HuffmanTreeNode.ParentNode parentNode -> {
-        final List<Boolean> leftCode = new ArrayList<>(currentCode);
-        leftCode.add(false);
-        buildCodesRecursive(parentNode.left(), leftCode, codes);
+    if (node instanceof HuffmanTreeNode.ParentNode parent) {
+      // 0 = left, 1 = right
+      var leftCode = new ArrayList<>(current);
+      leftCode.add(false);
+      buildCodesRecursive(parent.left(), leftCode, codes);
 
-        final List<Boolean> rightCode = new ArrayList<>(currentCode);
-        rightCode.add(true);
-        buildCodesRecursive(parentNode.right(), rightCode, codes);
-      }
-      case HuffmanTreeNode.LeafNode leafNode -> codes.put(leafNode.paletteIndex(), new ArrayList<>(currentCode));
+      var rightCode = new ArrayList<>(current);
+      rightCode.add(true);
+      buildCodesRecursive(parent.right(), rightCode, codes);
+    } else if (node instanceof HuffmanTreeNode.LeafNode leaf) {
+      codes.put(leaf.paletteIndex(), new ArrayList<>(current));
     }
-
   }
 
   private HuffmanEncoder() {

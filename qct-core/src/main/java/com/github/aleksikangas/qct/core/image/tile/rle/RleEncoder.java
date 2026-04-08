@@ -22,21 +22,19 @@ public final class RleEncoder {
   /**
    * A candidate for {@link ImageTile} encoding.
    *
-   * @param encoding   {@link ImageTile.Encoding#RUN_LENGTH_ENCODING}
    * @param subPalette the effective {@link SubPalette}
    * @param pixelBytes pixel data bytes
    */
-  public record Candidate(ImageTile.Encoding encoding,
-                          SubPalette subPalette,
+  public record Candidate(SubPalette subPalette,
                           int[] pixelBytes) implements ImageTileEncodingCandidate {
-    public Candidate(final SubPalette subPalette, final int[] pixelBytes) {
-      this(ImageTile.Encoding.RUN_LENGTH_ENCODING, subPalette, pixelBytes);
-    }
-
     public Candidate {
-      Objects.requireNonNull(encoding);
       Objects.requireNonNull(subPalette);
       Objects.requireNonNull(pixelBytes);
+    }
+
+    @Override
+    public ImageTile.Encoding encoding() {
+      return ImageTile.Encoding.RUN_LENGTH_ENCODING;
     }
 
     @Override
@@ -55,27 +53,18 @@ public final class RleEncoder {
     public boolean equals(final Object o) {
       if (o == null || getClass() != o.getClass()) return false;
       final Candidate that = (Candidate) o;
-      return Objects.deepEquals(pixelBytes, that.pixelBytes) &&
-             encoding == that.encoding &&
-             Objects.equals(subPalette, that.subPalette);
+      return Objects.deepEquals(pixelBytes, that.pixelBytes) && Objects.equals(subPalette, that.subPalette);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(encoding, subPalette, Arrays.hashCode(pixelBytes));
+      return Objects.hash(subPalette, Arrays.hashCode(pixelBytes));
     }
 
     @Nonnull
     @Override
     public String toString() {
-      return "RleImageTileEncodingCandidate{" +
-             "encoding=" +
-             encoding +
-             ", subPalette=" +
-             subPalette +
-             ", pixelBytes=" +
-             Arrays.toString(pixelBytes) +
-             '}';
+      return "Candidate{" + "subPalette=" + subPalette + ", pixelBytes=" + Arrays.toString(pixelBytes) + '}';
     }
 
     public static Candidate of(final ImageTile imageTile) {

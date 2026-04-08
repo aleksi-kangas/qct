@@ -4,6 +4,7 @@
 
 package com.github.aleksikangas.qct.core;
 
+import com.github.aleksikangas.qct.core.image.ImageIndex;
 import com.github.aleksikangas.qct.core.utils.BufferedQctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -15,6 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class QctFileTest {
@@ -40,8 +42,21 @@ class QctFileTest {
         assertEquals(originalQctFile.georeferencingCoefficients(), decodedQctFile.georeferencingCoefficients());
         assertEquals(originalQctFile.palette(), decodedQctFile.palette());
         assertEquals(originalQctFile.interpolationMatrix(), decodedQctFile.interpolationMatrix());
+        assertImageIndex(originalQctFile.imageIndex(), decodedQctFile.imageIndex());
       }
       Files.deleteIfExists(tempFile);
+    }
+  }
+
+  private static void assertImageIndex(final ImageIndex expectedImageIndex, final ImageIndex actualImageIndex) {
+    assertEquals(expectedImageIndex.heightTiles(), actualImageIndex.heightTiles());
+    assertEquals(expectedImageIndex.widthTiles(), actualImageIndex.widthTiles());
+    for (int yTile = 0; yTile < expectedImageIndex.heightTiles(); yTile++) {
+      for (int xTile = 0; xTile < expectedImageIndex.widthTiles(); xTile++) {
+        final int[][] expectedPaletteIndices = expectedImageIndex.imageTile(yTile, xTile).paletteIndices();
+        final int[][] actualPaletteIndices = actualImageIndex.imageTile(yTile, xTile).paletteIndices();
+        assertArrayEquals(expectedPaletteIndices, actualPaletteIndices);
+      }
     }
   }
 }
