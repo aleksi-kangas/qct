@@ -23,7 +23,6 @@ class GeoreferencingCoefficientsTest {
 
   private Path tempFile;
   private FileChannel fileChannel;
-  private QctReader qctReader;
   private QctWriter qctWriter;
 
   private static final double EPS = 1e-6;
@@ -32,7 +31,6 @@ class GeoreferencingCoefficientsTest {
   void beforeEach() throws IOException {
     tempFile = Files.createTempFile("georef", ".bin");
     fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE);
-    qctReader = new DirectQctReader(fileChannel);
     qctWriter = new QctWriter(fileChannel, GeoreferencingCoefficients.HEADER_SIZE);
   }
 
@@ -146,7 +144,7 @@ class GeoreferencingCoefficientsTest {
       final GeoreferencingCoefficients coefficients = createSimpleCoefficients();
 
       GeoreferencingCoefficients.Encoder.encode(qctWriter, coefficients);
-      final GeoreferencingCoefficients decodedCoefficients = GeoreferencingCoefficients.Decoder.decode(qctReader);
+      final GeoreferencingCoefficients decodedCoefficients = GeoreferencingCoefficients.Decoder.decode(fileChannel);
 
       assertEquals(coefficients, decodedCoefficients);
     }
@@ -157,6 +155,7 @@ class GeoreferencingCoefficientsTest {
 
       GeoreferencingCoefficients.Encoder.encode(qctWriter, coefficients);
 
+      final QctReader qctReader = new DirectQctReader(fileChannel);
       final double[] eas = qctReader.readDoubles(GeoreferencingCoefficients.BYTE_OFFSET, 10);
       final double[] nor = qctReader.readDoubles(GeoreferencingCoefficients.BYTE_OFFSET + 0x50, 10);
       final double[] lat = qctReader.readDoubles(GeoreferencingCoefficients.BYTE_OFFSET + 0xA0, 10);
@@ -179,7 +178,7 @@ class GeoreferencingCoefficientsTest {
         qctWriter.writeDouble(byteOffset + 0xF0 + i * 8, i + 30);
       }
 
-      final GeoreferencingCoefficients coefficients = GeoreferencingCoefficients.Decoder.decode(qctReader);
+      final GeoreferencingCoefficients coefficients = GeoreferencingCoefficients.Decoder.decode(fileChannel);
 
       assertEquals(0.0, coefficients.eas());
       assertEquals(10.0, coefficients.nor());

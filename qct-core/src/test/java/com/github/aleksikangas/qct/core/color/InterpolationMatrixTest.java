@@ -4,8 +4,6 @@
 
 package com.github.aleksikangas.qct.core.color;
 
-import com.github.aleksikangas.qct.core.utils.DirectQctReader;
-import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 import org.junit.jupiter.api.*;
 
@@ -20,14 +18,12 @@ import static org.junit.jupiter.api.Assertions.*;
 class InterpolationMatrixTest {
   private Path tempFile;
   private FileChannel fileChannel;
-  private QctReader qctReader;
   private QctWriter qctWriter;
 
   @BeforeEach
   void beforeEach() throws IOException {
     tempFile = Files.createTempFile("interpolation-matrix", ".bin");
     fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE);
-    qctReader = new DirectQctReader(fileChannel);
     qctWriter = new QctWriter(fileChannel, InterpolationMatrix.SIZE);
   }
 
@@ -112,7 +108,7 @@ class InterpolationMatrixTest {
       final int[] expectedIndices = createTestMatrix();
       qctWriter.writeBytes(InterpolationMatrix.BYTE_OFFSET, expectedIndices);
 
-      final InterpolationMatrix matrix = InterpolationMatrix.Decoder.decode(qctReader);
+      final InterpolationMatrix matrix = InterpolationMatrix.Decoder.decode(fileChannel);
 
       assertArrayEquals(expectedIndices, matrix.indices());
     }
@@ -129,7 +125,7 @@ class InterpolationMatrixTest {
 
       InterpolationMatrix.Encoder.encode(qctWriter, matrix);
 
-      final InterpolationMatrix decoded = InterpolationMatrix.Decoder.decode(qctReader);
+      final InterpolationMatrix decoded = InterpolationMatrix.Decoder.decode(fileChannel);
 
       assertArrayEquals(data, decoded.indices());
     }
@@ -141,7 +137,7 @@ class InterpolationMatrixTest {
     final var originalMatrix = new InterpolationMatrix(originalData);
 
     InterpolationMatrix.Encoder.encode(qctWriter, originalMatrix);
-    final InterpolationMatrix decodedMatrix = InterpolationMatrix.Decoder.decode(qctReader);
+    final InterpolationMatrix decodedMatrix = InterpolationMatrix.Decoder.decode(fileChannel);
 
     assertEquals(originalMatrix, decodedMatrix);
     assertArrayEquals(originalData, decodedMatrix.indices());
