@@ -26,7 +26,7 @@ UK. All map rights reserved by Ordnance Survey.*
           Feel free to open an issue with a sample `.qct` file for implementation and testing purposes.
 - **Encoding**
     - [x] [Run-Length-Encoded (RLE)](http://en.wikipedia.org/wiki/Run-length_encoding) tiles
-    - [ ] [Huffman-Coded](http://en.wikipedia.org/wiki/Huffman_coding) tiles
+    - [x] [Huffman-Coded](http://en.wikipedia.org/wiki/Huffman_coding) tiles
     - [ ] *Pixel-Packed* tiles
         - *Note:* Not implemented, as I have yet to come across any `.qct` file with _Pixel-Packed_ tiles.
           Feel free to open an issue with a sample `.qct` file for implementation and testing purposes.
