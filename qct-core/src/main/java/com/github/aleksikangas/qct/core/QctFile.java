@@ -10,8 +10,6 @@ import com.github.aleksikangas.qct.core.exception.QctRuntimeException;
 import com.github.aleksikangas.qct.core.georef.GeoreferencingCoefficients;
 import com.github.aleksikangas.qct.core.image.ImageIndex;
 import com.github.aleksikangas.qct.core.meta.Metadata;
-import com.github.aleksikangas.qct.core.utils.BufferedQctReader;
-import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +24,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 /**
  * <pre>
@@ -90,24 +89,34 @@ public record QctFile(Metadata metadata,
 
   public int[] rgbPixels() {
     final int[] rgbPixels = new int[imageIndex.pixelCount()];
-    for (int y = 0; y < imageIndex.heightPixels(); y++) {
-      for (int x = 0; x < imageIndex.widthPixels(); x++) {
-        final Color pixelColor = imageIndex.pixelColor(palette, y, x);
-        final int pixelIndex = y * imageIndex.widthPixels() + x;
-        rgbPixels[pixelIndex] = pixelColor.getRGB();
-      }
-    }
+    IntStream.range(0, imageIndex.pixelCount()).parallel().forEach(pixelIndex -> {
+      final int y = pixelIndex / imageIndex.widthPixels();
+      final int x = pixelIndex % imageIndex.widthPixels();
+      final Color pixelColor = imageIndex.pixelColor(palette, y, x);
+      rgbPixels[pixelIndex] = pixelColor.getRGB();
+    });
     return rgbPixels;
   }
 
+  public int[][] rgbPixels2D() {
+    final int[][] pixels = new int[heightPixels()][widthPixels()];
+    IntStream.range(0, heightPixels()).parallel().forEach(y -> {
+      for (int x = 0; x < widthPixels(); x++) {
+        final Color pixelColor = imageIndex.pixelColor(palette, y, x);
+        pixels[y][x] = pixelColor.getRGB();
+      }
+    });
+    return pixels;
+  }
+
   public static final class Decoder {
-    public static QctFile decode(final QctReader qctReader) {
-      final Metadata metadata = Metadata.Decoder.decode(qctReader);
+    public static QctFile decode(final FileChannel fileChannel) {
+      final Metadata metadata = Metadata.Decoder.decode(fileChannel);
       return new QctFile(metadata,
-                         GeoreferencingCoefficients.Decoder.decode(qctReader),
-                         Palette.Decoder.decode(qctReader),
-                         InterpolationMatrix.Decoder.decode(qctReader),
-                         ImageIndex.Decoder.decode(qctReader, metadata));
+                         GeoreferencingCoefficients.Decoder.decode(fileChannel),
+                         Palette.Decoder.decode(fileChannel),
+                         InterpolationMatrix.Decoder.decode(fileChannel),
+                         ImageIndex.Decoder.decode(fileChannel, metadata));
     }
 
     private Decoder() {
@@ -157,8 +166,7 @@ public record QctFile(Metadata metadata,
 
   private static void decodeEncode(final Path readPath, final Path writePath) {
     try (final var readFileChannel = FileChannel.open(readPath, Set.of(StandardOpenOption.READ))) {
-      final var qctReader = new BufferedQctReader(readFileChannel);
-      final QctFile qctFile = QctFile.Decoder.decode(qctReader);
+      final QctFile qctFile = QctFile.Decoder.decode(readFileChannel);
       if (LOG.isInfoEnabled()) {
         LOG.info(qctFile.toString());
       }

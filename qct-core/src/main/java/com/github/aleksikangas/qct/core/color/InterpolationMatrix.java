@@ -4,11 +4,13 @@
 
 package com.github.aleksikangas.qct.core.color;
 
+import com.github.aleksikangas.qct.core.utils.DirectQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
+import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -72,7 +74,8 @@ public record InterpolationMatrix(int[] indices) {
   }
 
   public static final class Decoder {
-    public static InterpolationMatrix decode(final QctReader qctReader) {
+    public static InterpolationMatrix decode(final FileChannel fileChannel) {
+      final QctReader qctReader = new DirectQctReader(fileChannel);
       return new InterpolationMatrix(qctReader.readBytes(InterpolationMatrix.BYTE_OFFSET, InterpolationMatrix.SIZE));
     }
 

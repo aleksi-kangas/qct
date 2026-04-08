@@ -4,10 +4,12 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
+import com.github.aleksikangas.qct.core.utils.DirectQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 
 import javax.annotation.Nonnull;
+import java.nio.channels.FileChannel;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Set;
@@ -169,7 +171,8 @@ public record Metadata(MagicNumber magicNumber,
   }
 
   public static final class Decoder {
-    public static Metadata decode(final QctReader qctReader) {
+    public static Metadata decode(final FileChannel fileChannel) {
+      final QctReader qctReader = new DirectQctReader(fileChannel);
       return new Metadata(MagicNumber.Decoder.decode(qctReader, Metadata.BYTE_OFFSET),
                           FileFormatVersion.Decoder.decode(qctReader, Math.toIntExact(Metadata.BYTE_OFFSET + 0x04L)),
                           qctReader.readInt(Math.toIntExact(Metadata.BYTE_OFFSET + 0x08L)),

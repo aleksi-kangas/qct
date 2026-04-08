@@ -6,6 +6,7 @@ package com.github.aleksikangas.qct.core.utils;
 
 import com.github.aleksikangas.qct.core.exception.QctRuntimeException;
 
+import javax.annotation.concurrent.ThreadSafe;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -21,6 +22,7 @@ import java.util.Objects;
  * @see QctReader
  * @see BufferedQctReader
  */
+@ThreadSafe
 public final class DirectQctReader implements QctReader {
   private final FileChannel fileChannel;
 

@@ -60,12 +60,9 @@ public final class PngConverter {
     final var imageInfo = new ImageInfo(qctFile.widthPixels(), qctFile.heightPixels(), 8, false);
     final var pngWriter = new PngWriter(exportPath.toFile(), imageInfo);
     final var imageLineInt = new ImageLineInt(imageInfo);
+    final int[][] rgbPixels2D = qctFile.rgbPixels2D();
     for (int y = 0; y < qctFile.heightPixels(); ++y) {
-      for (int x = 0; x < qctFile.widthPixels(); ++x) {
-        ImageLineHelper.setPixelRGB8(imageLineInt,
-                                     x,
-                                     qctFile.imageIndex().pixelColor(qctFile.palette(), y, x).getRGB());
-      }
+      ImageLineHelper.setPixelsRGB8(imageLineInt, rgbPixels2D[y]);
       pngWriter.writeRow(imageLineInt, y);
     }
     pngWriter.end();

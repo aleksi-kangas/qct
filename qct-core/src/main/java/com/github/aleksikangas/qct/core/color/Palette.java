@@ -4,12 +4,14 @@
 
 package com.github.aleksikangas.qct.core.color;
 
+import com.github.aleksikangas.qct.core.utils.DirectQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
 import java.awt.*;
+import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -90,7 +92,8 @@ public record Palette(Color[] colors) {
   }
 
   public static final class Decoder {
-    public static Palette decode(final QctReader qctReader) {
+    public static Palette decode(final FileChannel fileChannel) {
+      final QctReader qctReader = new DirectQctReader(fileChannel);
       final int[] bytes = qctReader.readBytes(Palette.BYTE_OFFSET, Palette.SIZE * 4);
       final Color[] colors = new Color[Palette.SIZE];
       for (int i = 0; i < Palette.SIZE; ++i) {

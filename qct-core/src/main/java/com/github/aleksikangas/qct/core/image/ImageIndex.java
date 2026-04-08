@@ -7,14 +7,19 @@ package com.github.aleksikangas.qct.core.image;
 import com.github.aleksikangas.qct.core.color.Palette;
 import com.github.aleksikangas.qct.core.image.tile.ImageTile;
 import com.github.aleksikangas.qct.core.meta.Metadata;
+import com.github.aleksikangas.qct.core.utils.BufferedQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
 import java.awt.*;
+import java.nio.channels.FileChannel;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * <pre>
@@ -87,7 +92,7 @@ public record ImageIndex(ImageTile[][] imageTiles) {
   }
 
   public static final class Decoder {
-    public static ImageIndex decode(final QctReader qctReader, final Metadata metadata) {
+    public static ImageIndex decode(final FileChannel fileChannel, final Metadata metadata) {
       Objects.requireNonNull(metadata);
       final int height = metadata.heightTiles();
       final int width = metadata.widthTiles();
@@ -95,15 +100,21 @@ public record ImageIndex(ImageTile[][] imageTiles) {
       Preconditions.checkState(width > 0, "width must be > 0");
 
       final ImageTile[][] imageTiles = new ImageTile[height][width];
+      final List<CompletableFuture<Void>> imageTileFutures = new ArrayList<>();
       for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
-          final int imageTilePointerOffset = Math.toIntExact(ImageIndex.BYTE_OFFSET +
-                                                             ((long) metadata.widthTiles() * y + x) * 0x04L);
-          final int imageTilePointer = qctReader.readPointer(Math.toIntExact(imageTilePointerOffset));
-          imageTiles[y][x] = ImageTile.Decoder.decode(qctReader, imageTilePointer);
+          final int yTile = y;
+          final int xTile = x;
+          imageTileFutures.add(CompletableFuture.runAsync(() -> {
+            final QctReader qctReader = new BufferedQctReader(fileChannel);
+            final int imageTilePointerOffset = Math.toIntExact(ImageIndex.BYTE_OFFSET +
+                                                               ((long) metadata.widthTiles() * yTile + xTile) * 0x04L);
+            final int imageTilePointer = qctReader.readPointer(Math.toIntExact(imageTilePointerOffset));
+            imageTiles[yTile][xTile] = ImageTile.Decoder.decode(qctReader, imageTilePointer);
+          }));
         }
       }
-
+      imageTileFutures.forEach(CompletableFuture::join);
       return new ImageIndex(imageTiles);
     }
 

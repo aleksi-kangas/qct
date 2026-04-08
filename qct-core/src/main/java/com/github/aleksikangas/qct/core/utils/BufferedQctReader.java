@@ -6,6 +6,7 @@ package com.github.aleksikangas.qct.core.utils;
 
 import com.github.aleksikangas.qct.core.exception.QctRuntimeException;
 
+import javax.annotation.concurrent.NotThreadSafe;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -16,13 +17,13 @@ import java.util.Objects;
 /**
  * Buffered implementation of {@link QctReader}.
  * <p/>
- * This class wraps a {@link FileChannel} and uses internal buffering to minimize
- * expensive I/O operations when performing many small reads (bytes, ints, doubles, strings)
- * at arbitrary offsets in a QCT file.
+ * This class wraps a {@link FileChannel} and uses internal buffering to minimize expensive I/O operations when
+ * performing many small reads (bytes, ints, doubles, strings) at arbitrary offsets in a QCT file.
  *
  * @see QctReader
  * @see DirectQctReader
  */
+@NotThreadSafe
 public final class BufferedQctReader implements QctReader {
   private final FileChannel fileChannel;
   private final int bufferSize;

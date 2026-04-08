@@ -9,9 +9,8 @@ import com.github.aleksikangas.qct.core.image.tile.ImageTileEncodingCandidate;
 import com.github.aleksikangas.qct.core.image.tile.huffman.HuffmanEncoder;
 import com.github.aleksikangas.qct.core.image.tile.rle.RleEncoder;
 
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public final class ImageTileEncodingChooser {
   /**
@@ -22,9 +21,10 @@ public final class ImageTileEncodingChooser {
    */
   public static ImageTileEncodingCandidate chooseEncoding(final ImageTile imageTile) {
     final Set<ImageTileEncodingCandidate> candidates = new HashSet<>();
-    candidates.add(RleEncoder.Candidate.of(imageTile));
-    candidates.add(HuffmanEncoder.Candidate.of(imageTile));
-    // TODO Pixel Packing
+    final List<CompletableFuture<Void>> candidatesFutures = new ArrayList<>();
+    candidatesFutures.add(CompletableFuture.runAsync(() -> candidates.add(HuffmanEncoder.Candidate.of(imageTile))));
+    candidatesFutures.add(CompletableFuture.runAsync(() -> candidates.add(RleEncoder.Candidate.of(imageTile))));
+    candidatesFutures.forEach(CompletableFuture::join);
     return candidates.stream().min(Comparator.comparingInt(ImageTileEncodingCandidate::sizeBytes)).orElseThrow();
   }
 

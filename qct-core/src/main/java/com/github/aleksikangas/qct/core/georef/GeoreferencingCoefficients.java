@@ -6,6 +6,7 @@ package com.github.aleksikangas.qct.core.georef;
 
 import com.github.aleksikangas.qct.core.QctFile;
 import com.github.aleksikangas.qct.core.meta.DatumShift;
+import com.github.aleksikangas.qct.core.utils.DirectQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
+import java.nio.channels.FileChannel;
 import java.util.Objects;
 
 /**
@@ -346,7 +348,8 @@ public record GeoreferencingCoefficients(double eas,
   }
 
   public static final class Decoder {
-    public static GeoreferencingCoefficients decode(final QctReader qctReader) {
+    public static GeoreferencingCoefficients decode(final FileChannel fileChannel) {
+      final QctReader qctReader = new DirectQctReader(fileChannel);
       final double[] easDoubles = qctReader.readDoubles(GeoreferencingCoefficients.BYTE_OFFSET, 10);
       final double[] norDoubles = qctReader.readDoubles(Math.toIntExact(GeoreferencingCoefficients.BYTE_OFFSET + 0x50L),
                                                         10);
