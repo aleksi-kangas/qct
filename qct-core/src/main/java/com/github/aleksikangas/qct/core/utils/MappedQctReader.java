@@ -7,6 +7,7 @@ package com.github.aleksikangas.qct.core.utils;
 import com.github.aleksikangas.qct.core.exception.QctRuntimeException;
 import com.google.common.base.Preconditions;
 
+import javax.annotation.concurrent.ThreadSafe;
 import java.io.IOException;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
@@ -20,16 +21,11 @@ import java.util.Objects;
  * This class maps the entire QCT file into memory using {@link MappedByteBuffer}, providing fast random access to the
  * file's contents without the overhead of repeated system calls. All read operations are performed directly on the
  * mapped buffer.
- * <p>
- * The implementation assumes the QCT file uses little-endian byte order and supports reading various primitive types
- * (bytes, integers, doubles) as well as null-terminated ASCII strings.
- * <p>
- * <strong>Thread safety:</strong> This class is not thread-safe. Concurrent access from multiple
- * threads requires external synchronization.
  *
  * @see QctReader
  * @see java.nio.MappedByteBuffer
  */
+@ThreadSafe
 public final class MappedQctReader implements QctReader {
   private final long fileSize;
   private final MappedByteBuffer mappedByteBuffer;
