@@ -4,6 +4,8 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
+import com.github.aleksikangas.qct.core.utils.MappedQctReader;
+import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,12 +25,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class MetadataTest {
   private Path tempFile;
   private FileChannel fileChannel;
+  private QctReader qctReader;
   private QctWriter qctWriter;
 
   @BeforeEach
   void beforeEach() throws IOException {
     tempFile = Files.createTempFile("metadata-test", ".bin");
     fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE);
+    qctReader = new MappedQctReader(fileChannel);
     qctWriter = new QctWriter(fileChannel, 2048);
   }
 
@@ -79,7 +83,7 @@ class MetadataTest {
 
     Metadata.Encoder.encode(qctWriter, original);
 
-    final Metadata decoded = Metadata.Decoder.decode(fileChannel);
+    final Metadata decoded = Metadata.Decoder.decode(qctReader);
 
     assertEquals(original.magicNumber(), decoded.magicNumber());
     assertEquals(original.fileFormatVersion(), decoded.fileFormatVersion());

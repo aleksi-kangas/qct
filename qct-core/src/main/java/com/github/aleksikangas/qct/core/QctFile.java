@@ -10,6 +10,8 @@ import com.github.aleksikangas.qct.core.exception.QctRuntimeException;
 import com.github.aleksikangas.qct.core.georef.GeoreferencingCoefficients;
 import com.github.aleksikangas.qct.core.image.ImageIndex;
 import com.github.aleksikangas.qct.core.meta.Metadata;
+import com.github.aleksikangas.qct.core.utils.MappedQctReader;
+import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,12 +113,13 @@ public record QctFile(Metadata metadata,
 
   public static final class Decoder {
     public static QctFile decode(final FileChannel fileChannel) {
-      final Metadata metadata = Metadata.Decoder.decode(fileChannel);
+      final QctReader qctReader = new MappedQctReader(fileChannel);
+      final Metadata metadata = Metadata.Decoder.decode(qctReader);
       return new QctFile(metadata,
-                         GeoreferencingCoefficients.Decoder.decode(fileChannel),
-                         Palette.Decoder.decode(fileChannel),
-                         InterpolationMatrix.Decoder.decode(fileChannel),
-                         ImageIndex.Decoder.decode(fileChannel, metadata));
+                         GeoreferencingCoefficients.Decoder.decode(qctReader),
+                         Palette.Decoder.decode(qctReader),
+                         InterpolationMatrix.Decoder.decode(qctReader),
+                         ImageIndex.Decoder.decode(qctReader, metadata));
     }
 
     private Decoder() {

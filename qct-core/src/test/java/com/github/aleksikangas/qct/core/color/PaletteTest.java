@@ -4,6 +4,8 @@
 
 package com.github.aleksikangas.qct.core.color;
 
+import com.github.aleksikangas.qct.core.utils.MappedQctReader;
+import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 import org.junit.jupiter.api.*;
 
@@ -19,12 +21,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class PaletteTest {
   private Path tempFile;
   private FileChannel fileChannel;
+  private QctReader qctReader;
   private QctWriter qctWriter;
 
   @BeforeEach
   void beforeEach() throws IOException {
     tempFile = Files.createTempFile("palette", ".bin");
     fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE);
+    qctReader = new MappedQctReader(fileChannel);
     qctWriter = new QctWriter(fileChannel, Palette.SIZE * 4);
   }
 
@@ -123,7 +127,7 @@ class PaletteTest {
       final Palette expectedPalette = new Palette(expectedColors);
       qctWriter.writeBytes(Palette.BYTE_OFFSET, expectedPalette.byteValues());
 
-      final Palette decodedPalette = Palette.Decoder.decode(fileChannel);
+      final Palette decodedPalette = Palette.Decoder.decode(qctReader);
 
       assertEquals(expectedPalette, decodedPalette);
     }
@@ -139,7 +143,7 @@ class PaletteTest {
       qctWriter.writeBytes(Palette.BYTE_OFFSET, singleColorBytes);
       qctWriter.writeBytes(Palette.BYTE_OFFSET + 4, new int[(Palette.SIZE - 1) * 4]);
 
-      final Palette palette = Palette.Decoder.decode(fileChannel);
+      final Palette palette = Palette.Decoder.decode(qctReader);
 
       assertEquals(testColor, palette.color(0));
     }
@@ -154,7 +158,7 @@ class PaletteTest {
       final var palette = new Palette(colors);
 
       Palette.Encoder.encode(qctWriter, palette);
-      final Palette decodedPalette = Palette.Decoder.decode(fileChannel);
+      final Palette decodedPalette = Palette.Decoder.decode(qctReader);
 
       assertEquals(palette, decodedPalette);
     }
@@ -166,7 +170,7 @@ class PaletteTest {
     final var originalPalette = new Palette(originalColors);
 
     Palette.Encoder.encode(qctWriter, originalPalette);
-    final Palette decodedPalette = Palette.Decoder.decode(fileChannel);
+    final Palette decodedPalette = Palette.Decoder.decode(qctReader);
 
     assertEquals(originalPalette, decodedPalette);
   }

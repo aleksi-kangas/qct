@@ -7,14 +7,12 @@ package com.github.aleksikangas.qct.core.image;
 import com.github.aleksikangas.qct.core.color.Palette;
 import com.github.aleksikangas.qct.core.image.tile.ImageTile;
 import com.github.aleksikangas.qct.core.meta.Metadata;
-import com.github.aleksikangas.qct.core.utils.BufferedQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
 import java.awt.*;
-import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -92,7 +90,7 @@ public record ImageIndex(ImageTile[][] imageTiles) {
   }
 
   public static final class Decoder {
-    public static ImageIndex decode(final FileChannel fileChannel, final Metadata metadata) {
+    public static ImageIndex decode(final QctReader qctReader, final Metadata metadata) {
       Objects.requireNonNull(metadata);
       final int height = metadata.heightTiles();
       final int width = metadata.widthTiles();
@@ -106,7 +104,6 @@ public record ImageIndex(ImageTile[][] imageTiles) {
           final int yTile = y;
           final int xTile = x;
           imageTileFutures.add(CompletableFuture.runAsync(() -> {
-            final QctReader qctReader = new BufferedQctReader(fileChannel);
             final int imageTilePointerOffset = Math.toIntExact(ImageIndex.BYTE_OFFSET +
                                                                ((long) metadata.widthTiles() * yTile + xTile) * 0x04L);
             final int imageTilePointer = qctReader.readPointer(Math.toIntExact(imageTilePointerOffset));
