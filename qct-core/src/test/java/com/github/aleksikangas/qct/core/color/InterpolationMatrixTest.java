@@ -4,7 +4,7 @@
 
 package com.github.aleksikangas.qct.core.color;
 
-import com.github.aleksikangas.qct.core.utils.MappedQctReader;
+import com.github.aleksikangas.qct.core.utils.DirectQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 import org.junit.jupiter.api.*;
@@ -27,7 +27,7 @@ class InterpolationMatrixTest {
   void beforeEach() throws IOException {
     tempFile = Files.createTempFile("interpolation-matrix", ".bin");
     fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE);
-    qctReader = new MappedQctReader(fileChannel);
+    qctReader = new DirectQctReader(fileChannel);
     qctWriter = new QctWriter(fileChannel, InterpolationMatrix.SIZE);
   }
 

@@ -4,7 +4,7 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
-import com.github.aleksikangas.qct.core.utils.MappedQctReader;
+import com.github.aleksikangas.qct.core.utils.DirectQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 import org.junit.jupiter.api.AfterEach;
@@ -32,7 +32,7 @@ class MetadataTest {
   void beforeEach() throws IOException {
     tempFile = Files.createTempFile("metadata-test", ".bin");
     fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE);
-    qctReader = new MappedQctReader(fileChannel);
+    qctReader = new DirectQctReader(fileChannel);
     qctWriter = new QctWriter(fileChannel, 2048);
   }
 

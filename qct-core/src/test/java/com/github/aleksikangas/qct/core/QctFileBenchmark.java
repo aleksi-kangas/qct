@@ -15,7 +15,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
 @State(Scope.Benchmark)
-public final class QctFileBenchmark {
+public class QctFileBenchmark {
   private static final String QCT_FILE_NAME = "/wr-41m2-droitwich-canals.qct";
 
   private Path qctFilePath;
