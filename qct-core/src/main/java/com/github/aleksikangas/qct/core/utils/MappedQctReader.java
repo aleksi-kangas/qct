@@ -97,7 +97,7 @@ public final class MappedQctReader implements QctReader {
     Preconditions.checkArgument(0 <= byteOffset && byteOffset < fileSize);
     final double[] doubles = new double[count];
     for (int i = 0; i < count; ++i) {
-      doubles[i] = readDouble(byteOffset + i);
+      doubles[i] = readDouble(byteOffset + i * 0x08);
     }
     return doubles;
   }
