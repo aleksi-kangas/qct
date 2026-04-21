@@ -10,6 +10,7 @@ import ar.com.hjg.pngj.ImageLineInt;
 import ar.com.hjg.pngj.PngWriter;
 import com.github.aleksikangas.qct.core.QctFile;
 import com.github.aleksikangas.qct.core.georef.GeoreferencingCoefficients;
+import com.github.aleksikangas.qct.core.interpolation.Interpolator;
 import org.geotools.data.WorldFileWriter;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
@@ -25,7 +26,8 @@ import java.nio.file.Path;
 public final class PngConverter {
   private static final Logger LOG = LoggerFactory.getLogger(PngConverter.class);
 
-  public record Options(GeoreferencingMode georeferencingMode) {
+  public record Options(GeoreferencingMode georeferencingMode,
+                        Interpolator.DownscaleMode downscaleMode) {
     public enum GeoreferencingMode {
       /**
        * Georeferencing disabled, projection ({@code .prj}) and world ({@code .pgw}) files shall not be created.
@@ -39,10 +41,9 @@ public final class PngConverter {
     }
   }
 
-  @SuppressWarnings("java:S1301")
   public static void convertPng(final QctFile qctFile, final Path exportPath, final Options options) {
     try {
-      exportPng(qctFile, exportPath);
+      exportPng(qctFile, options, exportPath);
       switch (options.georeferencingMode) {
         case AFFINE -> {
           final ReferencedEnvelope referencedEnvelope = referencedEnvelope(qctFile);
@@ -56,16 +57,25 @@ public final class PngConverter {
     }
   }
 
-  private static void exportPng(final QctFile qctFile, final Path exportPath) {
-    final var imageInfo = new ImageInfo(qctFile.widthPixels(), qctFile.heightPixels(), 8, false);
+  private static void exportPng(final QctFile qctFile, final Options options, final Path exportPath) {
+    // Inefficient use of memory for now.
+    final int[][] paletteIndices2D = Interpolator.downscale(qctFile.interpolationMatrix(),
+                                                            options.downscaleMode(),
+                                                            qctFile.paletteIndices2D());
+    final int[][] rgbPixels2D = qctFile.palette().rgbPixels2D(paletteIndices2D);
+    final int heightPixels = rgbPixels2D.length;
+    final int widthPixels = heightPixels > 0 ? rgbPixels2D[0].length : 0;
+    final var imageInfo = new ImageInfo(widthPixels, heightPixels, 8, false);
     final var pngWriter = new PngWriter(exportPath.toFile(), imageInfo);
-    final var imageLineInt = new ImageLineInt(imageInfo);
-    final int[][] rgbPixels2D = qctFile.rgbPixels2D();
-    for (int y = 0; y < qctFile.heightPixels(); ++y) {
-      ImageLineHelper.setPixelsRGB8(imageLineInt, rgbPixels2D[y]);
-      pngWriter.writeRow(imageLineInt, y);
+    try {
+      final var imageLineInt = new ImageLineInt(imageInfo);
+      for (int y = 0; y < rgbPixels2D.length; ++y) {
+        ImageLineHelper.setPixelsRGB8(imageLineInt, rgbPixels2D[y]);
+        pngWriter.writeRow(imageLineInt, y);
+      }
+    } finally {
+      pngWriter.end();
     }
-    pngWriter.end();
   }
 
   private static ReferencedEnvelope referencedEnvelope(final QctFile qctFile) {
