@@ -13,6 +13,7 @@ import java.awt.*;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * <pre>
@@ -87,6 +88,29 @@ public record Palette(Color[] colors) {
       bytes[i * 4 + 3] = 0;
     }
     return bytes;
+  }
+
+  public int[] rgbPixels(final int[] paletteIndices) {
+    final int n = paletteIndices.length;
+    final int[] rgbPixels = new int[n];
+    IntStream.range(0, n).parallel().forEach(pixelIndex -> {
+      final Color pixelColor = color(paletteIndices[pixelIndex]);
+      rgbPixels[pixelIndex] = pixelColor.getRGB();
+    });
+    return rgbPixels;
+  }
+
+  public int[][] rgbPixels2D(final int[][] paletteIndices) {
+    final int height = paletteIndices.length;
+    final int width = paletteIndices[0].length;
+    final int[][] rgbPixels = new int[height][width];
+    IntStream.range(0, height).parallel().forEach(y -> {
+      for (int x = 0; x < width; x++) {
+        final Color pixelColor = color(paletteIndices[y][x]);
+        rgbPixels[y][x] = pixelColor.getRGB();
+      }
+    });
+    return rgbPixels;
   }
 
   public static final class Decoder {

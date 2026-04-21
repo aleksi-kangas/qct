@@ -4,11 +4,11 @@
 
 package com.github.aleksikangas.qct.core;
 
-import com.github.aleksikangas.qct.core.color.InterpolationMatrix;
 import com.github.aleksikangas.qct.core.color.Palette;
 import com.github.aleksikangas.qct.core.exception.QctRuntimeException;
 import com.github.aleksikangas.qct.core.georef.GeoreferencingCoefficients;
 import com.github.aleksikangas.qct.core.image.ImageIndex;
+import com.github.aleksikangas.qct.core.interpolation.InterpolationMatrix;
 import com.github.aleksikangas.qct.core.meta.Metadata;
 import com.github.aleksikangas.qct.core.utils.MappedQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
@@ -87,6 +87,26 @@ public record QctFile(Metadata metadata,
 
   public int widthPixels() {
     return imageIndex.widthPixels();
+  }
+
+  public int[] paletteIndices() {
+    final int[] paletteIndices = new int[imageIndex.pixelCount()];
+    IntStream.range(0, imageIndex.pixelCount()).parallel().forEach(pixelIndex -> {
+      final int y = pixelIndex / imageIndex.widthPixels();
+      final int x = pixelIndex % imageIndex.widthPixels();
+      paletteIndices[pixelIndex] = imageIndex.pixelPaletteIndex(y, x);
+    });
+    return paletteIndices;
+  }
+
+  public int[][] paletteIndices2D() {
+    final int[][] paletteIndices = new int[heightPixels()][widthPixels()];
+    IntStream.range(0, heightPixels()).parallel().forEach(y -> {
+      for (int x = 0; x < widthPixels(); x++) {
+        paletteIndices[y][x] = imageIndex.pixelPaletteIndex(y, x);
+      }
+    });
+    return paletteIndices;
   }
 
   public int[] rgbPixels() {

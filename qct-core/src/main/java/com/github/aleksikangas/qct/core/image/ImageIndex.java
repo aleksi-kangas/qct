@@ -79,6 +79,16 @@ public record ImageIndex(ImageTile[][] imageTiles) {
     return imageTiles[yTile][xTile];
   }
 
+  public int pixelPaletteIndex(final int yPixel, final int xPixel) {
+    Objects.checkIndex(yPixel, heightPixels());
+    Objects.checkIndex(xPixel, widthPixels());
+    final int yTile = yPixel / ImageTile.HEIGHT;
+    final int xTile = xPixel / ImageTile.WIDTH;
+    final int yTilePixel = yPixel % ImageTile.HEIGHT;
+    final int xTilePixel = xPixel % ImageTile.WIDTH;
+    return imageTile(yTile, xTile).pixelPaletteIndex(yTilePixel, xTilePixel);
+  }
+
   public Color pixelColor(final Palette palette, final int yPixel, final int xPixel) {
     Objects.checkIndex(yPixel, heightPixels());
     Objects.checkIndex(xPixel, widthPixels());

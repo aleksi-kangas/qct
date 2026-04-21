@@ -2,7 +2,7 @@
  * Copyright (c) 2026 Aleksi Kangas
  */
 
-package com.github.aleksikangas.qct.core.color;
+package com.github.aleksikangas.qct.core.interpolation;
 
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
