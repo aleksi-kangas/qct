@@ -75,5 +75,6 @@
     <modules>
         <module>qct-convert</module>
         <module>qct-core</module>
+        <module>qct-ui</module>
     </modules>
 </project>
