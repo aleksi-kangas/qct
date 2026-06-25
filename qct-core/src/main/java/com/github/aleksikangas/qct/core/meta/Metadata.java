@@ -4,6 +4,7 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
+import com.github.aleksikangas.qct.core.image.tile.ImageTile;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 
@@ -102,6 +103,14 @@ public record Metadata(MagicNumber magicNumber,
     Objects.requireNonNull(originalFileCreationTime);
     Objects.requireNonNull(extendedData);
     Objects.requireNonNull(mapOutline);
+  }
+
+  public int widthPixels() {
+    return widthTiles * ImageTile.WIDTH;
+  }
+
+  public int heightPixels() {
+    return heightTiles * ImageTile.HEIGHT;
   }
 
   @Nonnull
