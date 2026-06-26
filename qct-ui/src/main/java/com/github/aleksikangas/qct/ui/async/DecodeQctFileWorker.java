@@ -5,6 +5,7 @@
 package com.github.aleksikangas.qct.ui.async;
 
 import com.github.aleksikangas.qct.core.QctFile;
+import com.github.aleksikangas.qct.ui.toast.QctToast;
 
 import javax.swing.*;
 import java.nio.channels.FileChannel;
@@ -12,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 public final class DecodeQctFileWorker extends SwingWorker<QctFile, Void> {
@@ -34,8 +36,12 @@ public final class DecodeQctFileWorker extends SwingWorker<QctFile, Void> {
   protected void done() {
     try {
       qctFileConsumer.accept(get());
-    } catch (final Exception e) {
-      // TODO
+      QctToast.show(QctToast.Type.SUCCESS, "Decode success");
+    } catch (final ExecutionException _) {
+      QctToast.show(QctToast.Type.ERROR, "Decode failed");
+    } catch (final InterruptedException _) {
+      Thread.currentThread().interrupt();
+      QctToast.show(QctToast.Type.ERROR, "Decode interrupted");
     }
   }
 }

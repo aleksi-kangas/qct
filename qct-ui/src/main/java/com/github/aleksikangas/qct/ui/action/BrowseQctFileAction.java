@@ -13,7 +13,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 public final class BrowseQctFileAction extends AbstractAction {
-  private final Consumer<Path> qctFilePathConsumer;
+  private final transient Consumer<Path> qctFilePathConsumer;
   @Nullable
   private final JComponent parent;
 
