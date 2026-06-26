@@ -17,7 +17,7 @@ public final class Toolbar extends JPanel {
 
   public Toolbar(final QctModel qctModel) {
     super(new MigLayout("insets 0", "[][grow][][]", "[fill]"));
-    final JButton browseButton = new JButton(new BrowseQctFileAction(qctModel::onQctFilePath, this));
+    final JButton browseButton = new JButton(new BrowseQctFileAction(qctModel::setQctFilePath, this));
     final JButton convertButton = new JButton(new ConvertQctFileAction(qctModel, this));
 
     add(new JLabel("File:"));
