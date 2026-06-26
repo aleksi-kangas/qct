@@ -11,7 +11,6 @@ import com.github.aleksikangas.qct.ui.image.action.ZoomInAction;
 import com.github.aleksikangas.qct.ui.image.action.ZoomOutAction;
 import com.github.aleksikangas.qct.ui.image.mouse.MinimapMouseAdapter;
 import com.github.aleksikangas.qct.ui.image.mouse.PanMouseMotionListener;
-import com.github.aleksikangas.qct.ui.image.state.Coordinates;
 import com.github.aleksikangas.qct.ui.image.state.ImageState;
 import com.github.aleksikangas.qct.ui.image.state.MinimapState;
 import net.miginfocom.swing.MigLayout;
@@ -20,10 +19,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.util.Objects;
-import java.util.Optional;
 
 public final class ImagePanel extends JPanel {
   private final transient ImageState imageState;
@@ -74,29 +71,6 @@ public final class ImagePanel extends JPanel {
       }
     });
 
-  }
-
-  private Optional<Rectangle> displayedImageRectangle(final BufferedImage image) {
-    final Coordinates topLeftImageCoordinates = imageState.panelToImage(Coordinates.panelCoordinates(0, 0));
-    final Coordinates bottomRightImageCoordinates = imageState.panelToImage(Coordinates.panelCoordinates(getWidth() -
-                                                                                                         1.0,
-                                                                                                         getHeight() -
-                                                                                                         1.0));
-    if (image.getHeight() <= topLeftImageCoordinates.y() ||
-        bottomRightImageCoordinates.y() < 0 ||
-        image.getWidth() <= topLeftImageCoordinates.x() ||
-        bottomRightImageCoordinates.x() < 0) {
-      return Optional.empty();
-    }
-    final int y1 = Math.max(0, topLeftImageCoordinates.yAsInt());
-    final int x1 = Math.max(0, topLeftImageCoordinates.xAsInt());
-    final int y2 = Math.min(image.getHeight() - 1, bottomRightImageCoordinates.yAsInt());
-    final int x2 = Math.min(image.getWidth() - 1, bottomRightImageCoordinates.xAsInt());
-    final var rectangle = new Rectangle(x1, y1, x2 - x1 + 1, y2 - y1 + 1);
-    if (rectangle.height < 1 || rectangle.width < 1) {
-      return Optional.empty();
-    }
-    return Optional.of(rectangle);
   }
 
   private void onImageTransform(final PropertyChangeEvent e) {
