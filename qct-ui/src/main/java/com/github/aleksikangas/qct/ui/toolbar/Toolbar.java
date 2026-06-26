@@ -5,7 +5,7 @@
 package com.github.aleksikangas.qct.ui.toolbar;
 
 import com.github.aleksikangas.qct.ui.action.BrowseQctFileAction;
-import com.github.aleksikangas.qct.ui.action.ConvertQctFileAction;
+import com.github.aleksikangas.qct.ui.action.ExportQctFileAction;
 import com.github.aleksikangas.qct.ui.model.QctModel;
 import net.miginfocom.swing.MigLayout;
 
@@ -18,12 +18,12 @@ public final class Toolbar extends JPanel {
   public Toolbar(final QctModel qctModel) {
     super(new MigLayout("insets 0", "[][grow][][]", "[fill]"));
     final JButton browseButton = new JButton(new BrowseQctFileAction(qctModel::setQctFilePath, this));
-    final JButton convertButton = new JButton(new ConvertQctFileAction(qctModel, this));
+    final JButton exportButton = new JButton(new ExportQctFileAction(qctModel, this));
 
     add(new JLabel("File:"));
     add(fileTextField, "growx");
     add(browseButton);
-    add(convertButton);
+    add(exportButton);
 
     qctModel.addPropertyChangeListener(e -> {
       if (Objects.equals(e.getPropertyName(), QctModel.QCT_FILE_PATH)) {

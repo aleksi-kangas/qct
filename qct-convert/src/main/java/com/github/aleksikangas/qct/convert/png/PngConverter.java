@@ -26,25 +26,10 @@ import java.nio.file.Path;
 public final class PngConverter {
   private static final Logger LOG = LoggerFactory.getLogger(PngConverter.class);
 
-  public record Options(GeoreferencingMode georeferencingMode,
-                        Interpolator.DownscaleMode downscaleMode) {
-    public enum GeoreferencingMode {
-      /**
-       * Georeferencing disabled, projection ({@code .prj}) and world ({@code .pgw}) files shall not be created.
-       */
-      DISABLED,
-      /**
-       * Affine transformation shall be used. Affine transformation may not be accurate when the second and third order
-       * {@link GeoreferencingCoefficients} are non-zero.
-       */
-      AFFINE,
-    }
-  }
-
-  public static void convertPng(final QctFile qctFile, final Path exportPath, final Options options) {
+  public static void convertPng(final QctFile qctFile, final Path exportPath, final PngConvertFormatOptions options) {
     try {
       exportPng(qctFile, options, exportPath);
-      switch (options.georeferencingMode) {
+      switch (options.georeferencingMode()) {
         case AFFINE -> {
           final ReferencedEnvelope referencedEnvelope = referencedEnvelope(qctFile);
           exportProjectionFile(referencedEnvelope, exportPath);
@@ -57,11 +42,9 @@ public final class PngConverter {
     }
   }
 
-  private static void exportPng(final QctFile qctFile, final Options options, final Path exportPath) {
+  private static void exportPng(final QctFile qctFile, final PngConvertFormatOptions options, final Path exportPath) {
     // Inefficient use of memory for now.
-    final int[][] paletteIndices2D = Interpolator.downscale(qctFile.interpolationMatrix(),
-                                                            options.downscaleMode(),
-                                                            qctFile.paletteIndices2D());
+    final int[][] paletteIndices2D = downscaleIfRequested(qctFile, options);
     final int[][] rgbPixels2D = qctFile.palette().rgbPixels2D(paletteIndices2D);
     final int heightPixels = rgbPixels2D.length;
     final int widthPixels = heightPixels > 0 ? rgbPixels2D[0].length : 0;
@@ -76,6 +59,15 @@ public final class PngConverter {
     } finally {
       pngWriter.end();
     }
+  }
+
+  private static int[][] downscaleIfRequested(final QctFile qctFile, final PngConvertFormatOptions options) {
+    if (options.downscaleFactor() != null) {
+      return Interpolator.downscale(qctFile.interpolationMatrix(),
+                                    options.downscaleFactor(),
+                                    qctFile.paletteIndices2D());
+    }
+    return qctFile.paletteIndices2D();
   }
 
   private static ReferencedEnvelope referencedEnvelope(final QctFile qctFile) {

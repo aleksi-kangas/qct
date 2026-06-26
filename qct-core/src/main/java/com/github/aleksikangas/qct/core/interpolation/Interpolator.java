@@ -9,8 +9,7 @@ import com.google.common.base.Preconditions;
 import java.util.Objects;
 
 public final class Interpolator {
-  public enum DownscaleMode {
-    X1(0),
+  public enum DownscaleFactor {
     X2(1),
     X4(2),
     X8(3),
@@ -19,7 +18,7 @@ public final class Interpolator {
 
     private final int iterations;
 
-    DownscaleMode(final int iterations) {
+    DownscaleFactor(final int iterations) {
       this.iterations = iterations;
     }
 
@@ -29,27 +28,27 @@ public final class Interpolator {
   }
 
   /**
-   * Downscales a 2D array of palette indices according to the given {@link DownscaleMode} in both dimensions using the
-   * {@link InterpolationMatrix}.
+   * Downscales a 2D array of palette indices according to the given {@link DownscaleFactor} in both dimensions using
+   * the {@link InterpolationMatrix}.
    * <p/>
    * This is the method you call when you want to render a tile (or any block) at a smaller scale, while preserving
    * roads, text, and other important features.
    *
    * @param interpolationMatrix to downscale with
-   * @param downscaleMode       defining downscaling mode
+   * @param downscaleFactor     defining downscaling factor
    * @param paletteIndices      rectangular 2D array of palette indices
-   * @return new 2D array of the same palette indices, downscaled according to {@link DownscaleMode} in each dimension
+   * @return new 2D array of the same palette indices, downscaled according to {@link DownscaleFactor} in each dimension
    */
   public static int[][] downscale(final InterpolationMatrix interpolationMatrix,
-                                  final DownscaleMode downscaleMode,
+                                  final DownscaleFactor downscaleFactor,
                                   int[][] paletteIndices) {
     Objects.requireNonNull(interpolationMatrix, "interpolationMatrix");
     Objects.requireNonNull(paletteIndices, "paletteIndices");
     final int originalHeight = paletteIndices.length;
     final int originalWidth = paletteIndices[0].length;
     Preconditions.checkArgument(originalHeight % 2 == 0 && originalWidth % 2 == 0);
-    final int downscaleIterations = downscaleMode.iterations();
-    for (int i = 0; i < downscaleIterations; ++i) {
+    final int downscaleIterations = downscaleFactor.iterations();
+    for (int i = 1; i <= downscaleIterations; ++i) {
       paletteIndices = downscale2x(interpolationMatrix, paletteIndices);
     }
     return paletteIndices;

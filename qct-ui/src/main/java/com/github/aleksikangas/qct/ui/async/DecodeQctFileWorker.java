@@ -36,7 +36,7 @@ public final class DecodeQctFileWorker extends SwingWorker<QctFile, Void> {
   protected void done() {
     try {
       qctFileConsumer.accept(get());
-      QctToast.show(QctToast.Type.SUCCESS, "Decode success");
+      QctToast.show(QctToast.Type.SUCCESS, "Decode successful");
     } catch (final ExecutionException _) {
       QctToast.show(QctToast.Type.ERROR, "Decode failed");
     } catch (final InterruptedException _) {
