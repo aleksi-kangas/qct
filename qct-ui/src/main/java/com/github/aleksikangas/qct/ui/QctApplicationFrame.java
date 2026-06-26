@@ -5,10 +5,10 @@
 package com.github.aleksikangas.qct.ui;
 
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
+import com.github.aleksikangas.qct.ui.header.Header;
 import com.github.aleksikangas.qct.ui.image.ImagePanel;
 import com.github.aleksikangas.qct.ui.meta.MetadataPanel;
 import com.github.aleksikangas.qct.ui.model.QctModel;
-import com.github.aleksikangas.qct.ui.toolbar.Toolbar;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
@@ -35,7 +35,7 @@ public final class QctApplicationFrame extends JFrame {
 
   private JPanel createContentPane() {
     final var contentPane = new JPanel(new MigLayout("fill, insets 10", "[grow]", "[pref!][grow]"));
-    contentPane.add(new Toolbar(qctModel), "growx, wrap");
+    contentPane.add(new Header(qctModel), "growx, wrap");
     final var metadataPanel = new MetadataPanel(qctModel);
     final var metadataScrollPane = new JScrollPane(metadataPanel);
     metadataScrollPane.setBorder(BorderFactory.createEmptyBorder());

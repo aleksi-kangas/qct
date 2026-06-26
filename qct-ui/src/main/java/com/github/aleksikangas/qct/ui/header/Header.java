@@ -2,7 +2,7 @@
  * Copyright (c) 2026 Aleksi Kangas
  */
 
-package com.github.aleksikangas.qct.ui.toolbar;
+package com.github.aleksikangas.qct.ui.header;
 
 import com.github.aleksikangas.qct.ui.action.BrowseQctFileAction;
 import com.github.aleksikangas.qct.ui.action.ExportQctFileAction;
@@ -12,10 +12,10 @@ import net.miginfocom.swing.MigLayout;
 import javax.swing.*;
 import java.util.Objects;
 
-public final class Toolbar extends JPanel {
+public final class Header extends JPanel {
   private final JTextField fileTextField = new JTextField();
 
-  public Toolbar(final QctModel qctModel) {
+  public Header(final QctModel qctModel) {
     super(new MigLayout("insets 0", "[][grow][][]", "[fill]"));
     final JButton browseButton = new JButton(new BrowseQctFileAction(qctModel::setQctFilePath, this));
     final JButton exportButton = new JButton(new ExportQctFileAction(qctModel, this));
