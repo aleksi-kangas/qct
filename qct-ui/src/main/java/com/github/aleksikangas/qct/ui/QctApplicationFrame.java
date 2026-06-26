@@ -7,6 +7,7 @@ package com.github.aleksikangas.qct.ui;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import com.github.aleksikangas.qct.ui.image.ImagePanel;
 import com.github.aleksikangas.qct.ui.meta.MetadataPanel;
+import com.github.aleksikangas.qct.ui.model.QctModel;
 import com.github.aleksikangas.qct.ui.toolbar.Toolbar;
 import net.miginfocom.swing.MigLayout;
 

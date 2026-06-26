@@ -2,7 +2,7 @@
  * Copyright (c) 2026 Aleksi Kangas
  */
 
-package com.github.aleksikangas.qct.ui;
+package com.github.aleksikangas.qct.ui.model;
 
 import com.github.aleksikangas.qct.core.QctFile;
 import com.github.aleksikangas.qct.ui.async.DecodeQctFileWorker;

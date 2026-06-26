@@ -4,7 +4,7 @@
 
 package com.github.aleksikangas.qct.ui.action;
 
-import com.github.aleksikangas.qct.ui.QctModel;
+import com.github.aleksikangas.qct.ui.model.QctModel;
 
 import javax.annotation.Nullable;
 import javax.swing.*;

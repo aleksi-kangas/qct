@@ -4,9 +4,9 @@
 
 package com.github.aleksikangas.qct.ui.toolbar;
 
-import com.github.aleksikangas.qct.ui.QctModel;
 import com.github.aleksikangas.qct.ui.action.BrowseQctFileAction;
 import com.github.aleksikangas.qct.ui.action.ConvertQctFileAction;
+import com.github.aleksikangas.qct.ui.model.QctModel;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;

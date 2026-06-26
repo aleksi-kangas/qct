@@ -5,7 +5,6 @@
 package com.github.aleksikangas.qct.ui.image;
 
 import com.github.aleksikangas.qct.core.QctFile;
-import com.github.aleksikangas.qct.ui.QctModel;
 import com.github.aleksikangas.qct.ui.async.QctFileToBufferedImageWorker;
 import com.github.aleksikangas.qct.ui.image.action.ZoomInAction;
 import com.github.aleksikangas.qct.ui.image.action.ZoomOutAction;
@@ -13,6 +12,7 @@ import com.github.aleksikangas.qct.ui.image.mouse.MinimapMouseAdapter;
 import com.github.aleksikangas.qct.ui.image.mouse.PanMouseMotionListener;
 import com.github.aleksikangas.qct.ui.image.state.ImageState;
 import com.github.aleksikangas.qct.ui.image.state.MinimapState;
+import com.github.aleksikangas.qct.ui.model.QctModel;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;

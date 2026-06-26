@@ -6,7 +6,7 @@ package com.github.aleksikangas.qct.ui.meta;
 
 import com.github.aleksikangas.qct.core.QctFile;
 import com.github.aleksikangas.qct.core.meta.*;
-import com.github.aleksikangas.qct.ui.QctModel;
+import com.github.aleksikangas.qct.ui.model.QctModel;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
