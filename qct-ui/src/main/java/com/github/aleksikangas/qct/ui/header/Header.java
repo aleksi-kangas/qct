@@ -4,31 +4,37 @@
 
 package com.github.aleksikangas.qct.ui.header;
 
-import com.github.aleksikangas.qct.ui.action.BrowseQctFileAction;
-import com.github.aleksikangas.qct.ui.action.ExportQctFileAction;
-import com.github.aleksikangas.qct.ui.model.QctModel;
+import com.github.aleksikangas.qct.ui.export.ExportManager;
+import com.github.aleksikangas.qct.ui.file.QctFileManager;
+import com.github.aleksikangas.qct.ui.header.action.BrowseQctFileAction;
+import com.github.aleksikangas.qct.ui.header.action.ExportQctFileAction;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
+import java.nio.file.Path;
 import java.util.Objects;
 
 public final class Header extends JPanel {
   private final JTextField fileTextField = new JTextField();
 
-  public Header(final QctModel qctModel) {
+  private final transient QctFileManager qctFileManager;
+  private final JButton exportButton;
+
+  public Header(final ExportManager exportManager, final QctFileManager qctFileManager) {
     super(new MigLayout("insets 0", "[][grow][][]", "[fill]"));
-    final JButton browseButton = new JButton(new BrowseQctFileAction(qctModel::setQctFilePath, this));
-    final JButton exportButton = new JButton(new ExportQctFileAction(qctModel, this));
+    this.qctFileManager = Objects.requireNonNull(qctFileManager);
+    exportButton = new JButton(new ExportQctFileAction(exportManager, qctFileManager, this));
+    fileTextField.setEditable(false);
 
     add(new JLabel("File:"));
     add(fileTextField, "growx");
-    add(browseButton);
+    add(new JButton(new BrowseQctFileAction(this::onBrowseButtonClick, this)));
     add(exportButton);
+  }
 
-    qctModel.addPropertyChangeListener(e -> {
-      if (Objects.equals(e.getPropertyName(), QctModel.QCT_FILE_PATH)) {
-        fileTextField.setText(e.getNewValue().toString());
-      }
-    });
+  private void onBrowseButtonClick(final Path qctFilePath) {
+    qctFileManager.setSelectedQctFile(qctFilePath);
+    fileTextField.setText(qctFilePath.toString());
+    exportButton.setEnabled(true);
   }
 }

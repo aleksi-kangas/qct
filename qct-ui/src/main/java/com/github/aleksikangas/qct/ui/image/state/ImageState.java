@@ -9,17 +9,15 @@ import com.github.aleksikangas.qct.ui.image.action.AbstractZoomAction;
 import javax.annotation.Nullable;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Supplier;
 
 public final class ImageState {
-  public static final String IMAGE_REPAINT = "IMAGE";
-
+  private final Set<ImageStateListener> imageStateListeners = new CopyOnWriteArraySet<>();
   private final MinimapState minimapState = new MinimapState();
-  private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
   private final Supplier<Integer> panelHeightSupplier;
   private final Supplier<Integer> panelWidthSupplier;
@@ -40,12 +38,12 @@ public final class ImageState {
     this.panelWidthSupplier = Objects.requireNonNull(panelWidthSupplier);
   }
 
-  public void addPropertyChangeListener(final PropertyChangeListener propertyChangeListener) {
-    pcs.addPropertyChangeListener(propertyChangeListener);
+  public void addListener(final ImageStateListener imageStateListener) {
+    imageStateListeners.add(Objects.requireNonNull(imageStateListener));
   }
 
-  public void removePropertyChangeListener(final PropertyChangeListener propertyChangeListener) {
-    pcs.removePropertyChangeListener(propertyChangeListener);
+  public void removeListener(final ImageStateListener imageStateListener) {
+    imageStateListeners.remove(Objects.requireNonNull(imageStateListener));
   }
 
   public MinimapState getMinimapState() {
@@ -105,7 +103,7 @@ public final class ImageState {
   public void setImage(final BufferedImage image, final int width, final int height) {
     this.image = Objects.requireNonNull(image);
     onResize(width, height);
-    pcs.firePropertyChange(IMAGE_REPAINT, null, null);
+    notifyListeners();
   }
 
   public void clear() {
@@ -114,26 +112,26 @@ public final class ImageState {
     imageScale = 0.0;
     origin.setLocation(0, 0);
     minimapState.clear();
-    pcs.firePropertyChange(IMAGE_REPAINT, null, null);
+    notifyListeners();
   }
 
   public void centerAt(final Coordinates imageCoordinates) {
     if (image == null) return;
     origin.setLocation(panelWidthSupplier.get() / 2 - imageCoordinates.xAsInt(),
                        panelHeightSupplier.get() / 2 - imageCoordinates.yAsInt());
-    pcs.firePropertyChange(IMAGE_REPAINT, null, null);
+    notifyListeners();
   }
 
   public void resize(final int width, final int height) {
     if (image == null) return;
     onResize(width, height);
-    pcs.firePropertyChange(IMAGE_REPAINT, null, null);
+    notifyListeners();
   }
 
   public void translateOrigin(final int dy, final int dx) {
     if (image == null) return;
     origin.translate(dx, dy);
-    pcs.firePropertyChange(IMAGE_REPAINT, null, null);
+    notifyListeners();
   }
 
   public void zoom(final double zoomFactor) {
@@ -147,7 +145,7 @@ public final class ImageState {
                             AbstractZoomAction.ZOOM_MAX * imageFitScale);
     origin.setLocation(centerPanelCoordinates.x() - centerImageCoordinates.x() * imageScale,
                        centerPanelCoordinates.y() - centerImageCoordinates.y() * imageScale);
-    pcs.firePropertyChange(IMAGE_REPAINT, null, null);
+    notifyListeners();
   }
 
   private void onResize(final int width, final int height) {
@@ -156,5 +154,9 @@ public final class ImageState {
     imageScale = imageFitScale;
     origin.setLocation((width - getWidth()) / 2, (height - getHeight()) / 2);
     minimapState.update(image, height);
+  }
+
+  private void notifyListeners() {
+    imageStateListeners.forEach(ImageStateListener::onImageStateChange);
   }
 }

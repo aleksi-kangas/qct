@@ -9,7 +9,6 @@ import com.github.aleksikangas.qct.convert.png.PngConvertFormatOptions;
 import com.github.aleksikangas.qct.core.interpolation.Interpolator;
 import com.github.aleksikangas.qct.ui.export.AbstractOptionsPanel;
 import com.jgoodies.validation.ValidationResult;
-import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.util.Optional;
@@ -21,14 +20,12 @@ public final class PngExportOptionsPanel extends AbstractOptionsPanel {
   private final JComboBox<Interpolator.DownscaleFactor> downscaleFactorComboBox = new JComboBox<>(Interpolator.DownscaleFactor.values());
 
   public PngExportOptionsPanel() {
-    setLayout(new MigLayout("fill, insets 0", "[][grow]", ""));
-
     add(new JLabel("Georeferencing:"));
-    add(georeferencingModeComboBox, "wrap");
+    add(georeferencingModeComboBox, "growx, wrap");
 
     add(downscaleCheckBox);
     downscaleCheckBox.addActionListener(_ -> onDownscaleCheckBoxClick());
-    add(downscaleFactorComboBox, "wrap");
+    add(downscaleFactorComboBox, "growx, wrap");
 
     onDownscaleCheckBoxClick();
   }

@@ -5,35 +5,35 @@
 package com.github.aleksikangas.qct.ui.image;
 
 import com.github.aleksikangas.qct.core.QctFile;
-import com.github.aleksikangas.qct.ui.async.QctFileToBufferedImageWorker;
+import com.github.aleksikangas.qct.ui.file.QctFileManager;
 import com.github.aleksikangas.qct.ui.image.action.ZoomInAction;
 import com.github.aleksikangas.qct.ui.image.action.ZoomOutAction;
 import com.github.aleksikangas.qct.ui.image.mouse.MinimapMouseAdapter;
 import com.github.aleksikangas.qct.ui.image.mouse.PanMouseMotionListener;
 import com.github.aleksikangas.qct.ui.image.state.ImageState;
 import com.github.aleksikangas.qct.ui.image.state.MinimapState;
-import com.github.aleksikangas.qct.ui.model.QctModel;
+import com.github.aleksikangas.qct.ui.image.worker.QctFileToBufferedImageWorker;
+import com.github.aleksikangas.qct.ui.utils.ThreadUtils;
 import net.miginfocom.swing.MigLayout;
 
+import javax.annotation.Nullable;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.beans.PropertyChangeEvent;
-import java.util.Objects;
 
 public final class ImagePanel extends JPanel {
   private final transient ImageState imageState;
 
-  public ImagePanel(final QctModel qctModel) {
+  public ImagePanel(final QctFileManager qctFileManager) {
     super(new MigLayout("insets 4", "[fill, grow]", "[fill, grow]"));
     imageState = new ImageState(this::getHeight, this::getWidth);
 
     registerComponentListeners();
     registerKeybinds();
     registerMouseListeners();
-    imageState.addPropertyChangeListener(this::onImageTransform);
-    qctModel.addPropertyChangeListener(this::onQctFileEvent);
+    imageState.addListener(this::onImageStateChange);
+    qctFileManager.addListener(this::onQctFile);
   }
 
   @Override
@@ -73,22 +73,19 @@ public final class ImagePanel extends JPanel {
 
   }
 
-  private void onImageTransform(final PropertyChangeEvent e) {
-    if (Objects.equals(e.getPropertyName(), ImageState.IMAGE_REPAINT)) {
-      repaint();
-    }
+  private void onImageStateChange() {
+    repaint();
   }
 
-  private void onQctFileEvent(final PropertyChangeEvent e) {
-    if (Objects.equals(e.getPropertyName(), QctModel.QCT_FILE)) {
-      final QctFile qctFile = (QctFile) e.getNewValue();
+  private void onQctFile(@Nullable final QctFile qctFile) {
+    ThreadUtils.runOnEDT(() -> {
       if (qctFile != null) {
         new QctFileToBufferedImageWorker(qctFile,
                                          image -> imageState.setImage(image, getWidth(), getHeight())).execute();
       } else {
         imageState.clear();
       }
-    }
+    });
   }
 
   private void registerComponentListeners() {

@@ -5,10 +5,13 @@
 package com.github.aleksikangas.qct.ui.export;
 
 import com.github.aleksikangas.qct.convert.ConvertFormatOptions;
-import com.github.aleksikangas.qct.ui.async.ExportQctFileWorker;
+import com.github.aleksikangas.qct.convert.png.PngConvertFormatOptions;
+import com.github.aleksikangas.qct.core.QctFile;
+import com.github.aleksikangas.qct.ui.export.action.BrowseExportPathAction;
 import com.github.aleksikangas.qct.ui.export.png.PngExportOptionsPanel;
-import com.github.aleksikangas.qct.ui.model.QctModel;
-import com.google.common.base.Preconditions;
+import com.github.aleksikangas.qct.ui.export.png.PngExportTask;
+import com.github.aleksikangas.qct.ui.export.task.ExportTask;
+import com.github.aleksikangas.qct.ui.file.QctFileManager;
 import com.jgoodies.validation.ValidationResult;
 import com.jgoodies.validation.ValidationResultModel;
 import com.jgoodies.validation.Validator;
@@ -17,6 +20,7 @@ import net.miginfocom.swing.MigLayout;
 
 import javax.annotation.Nullable;
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -28,25 +32,37 @@ public final class ExportDialog extends JDialog {
   private final ValidationResultModel validationResultModel = new DefaultValidationResultModel();
   private final JComboBox<ExportFormat> formatComboBox = new JComboBox<>(ExportFormat.values());
   private final JTextField exportPathTextField = new JTextField();
-  private final JPanel optionsContainerPanel = new JPanel(new MigLayout("fill", "[grow]", "[grow]"));
-  private final transient QctModel qctModel;
+  private final JPanel optionsPanelHolder = new JPanel(new BorderLayout());
+  private final JButton exportButton = new JButton("Export");
+
+  private final transient ExportManager exportManager;
+  private final transient QctFileManager qctFileManager;
+  private final transient QctFile qctFile;
+
   @Nullable
   private AbstractOptionsPanel optionsPanel = null;
 
-  private ExportDialog(final QctModel qctModel, @Nullable final Window owner) {
+  private ExportDialog(final ExportManager exportManager,
+                       final QctFileManager qctFileManager,
+                       @Nullable final Window owner) {
     super(owner, "Convert", ModalityType.APPLICATION_MODAL);
-    this.qctModel = Objects.requireNonNull(qctModel);
-    setLayout(new MigLayout("insets dialog", "[][grow]", ""));
+    this.exportManager = Objects.requireNonNull(exportManager);
+    this.qctFileManager = Objects.requireNonNull(qctFileManager);
+    this.qctFile = qctFileManager.getQctFile().orElseThrow();
+    setLayout(new MigLayout("fillx, insets dialog", "[][fill, grow]", ""));
 
     add(new JLabel("Format:"));
-    add(formatComboBox, "wrap");
-    formatComboBox.addActionListener(_ -> displayFormatOptions());
+    add(formatComboBox, "growx, wrap");
+    formatComboBox.addActionListener(_ -> {
+      displayFormatOptions();
+      setDefaultExportPath();
+    });
     formatComboBox.setSelectedItem(Arrays.stream(ExportFormat.values()).findFirst().orElseThrow());
 
     add(new JLabel("Output:"));
-    add(createOutputPanel(), "wrap");
+    add(createOutputPanel(), "growx, wrap");
 
-    add(optionsContainerPanel, "span 2, wrap");
+    add(optionsPanelHolder, "span 2, growx, wrap");
 
     add(createButtonPanel(), "span 2, right");
 
@@ -56,42 +72,54 @@ public final class ExportDialog extends JDialog {
     setLocationRelativeTo(owner);
   }
 
-  public static void showDialog(final QctModel qctModel, @Nullable final Component parent) {
+  public static void showDialog(final ExportManager exportManager,
+                                final QctFileManager qctFileManager,
+                                @Nullable final Component parent) {
     final Window owner = parent == null ? null : SwingUtilities.getWindowAncestor(parent);
-    final var dialog = new ExportDialog(qctModel, owner);
+    final var dialog = new ExportDialog(exportManager, qctFileManager, owner);
     dialog.setVisible(true);
   }
 
   private JPanel createOutputPanel() {
+    exportPathTextField.setEditable(false);
+    exportPathTextField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+      @Override
+      public void insertUpdate(javax.swing.event.DocumentEvent e) {
+        validateDialog();
+      }
+
+      @Override
+      public void removeUpdate(javax.swing.event.DocumentEvent e) {
+        validateDialog();
+      }
+
+      @Override
+      public void changedUpdate(javax.swing.event.DocumentEvent e) {
+        validateDialog();
+      }
+    });
+    setDefaultExportPath();
     final var outputPanel = new JPanel(new MigLayout("insets 0", "[grow,fill][]", ""));
     outputPanel.add(exportPathTextField);
-    outputPanel.add(createBrowseButton());
+    outputPanel.add(new JButton(new BrowseExportPathAction(this::getExportPath,
+                                                           this::getExportFormatFileNameExtensionFilter,
+                                                           exportPath -> exportPathTextField.setText(exportPath.toString()),
+                                                           this)));
     return outputPanel;
   }
 
-  private JButton createBrowseButton() {
-    final JButton button = new JButton("Browse...");
-    button.addActionListener(e -> {
-      final var fileChooser = new JFileChooser();
-      if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-        exportPathTextField.setText(fileChooser.getSelectedFile().toPath().toString());
-      }
-    });
-    return button;
-  }
-
   private JPanel createButtonPanel() {
-    final var panel = new JPanel(new MigLayout("ins 0", "[]", ""));
-    final var exportButton = new JButton("Export");
-    exportButton.addActionListener(e -> onExport());
+    final var panel = new JPanel(new MigLayout("insets 0", "[]", ""));
+    exportButton.addActionListener(_ -> onExport());
     panel.add(exportButton);
     return panel;
   }
 
-  private boolean validateDialog() {
+  private void validateDialog() {
     final ValidationResult validationResult = convertDialogValidator().validate(this);
     validationResultModel.setResult(validationResult);
-    return !validationResult.hasErrors();
+    final boolean isValid = !validationResult.hasErrors();
+    exportButton.setEnabled(isValid);
   }
 
   private Validator<ExportDialog> convertDialogValidator() {
@@ -111,6 +139,18 @@ public final class ExportDialog extends JDialog {
     return Objects.requireNonNull((ExportFormat) formatComboBox.getSelectedItem());
   }
 
+  private String getExportFormatExtension() {
+    return switch (getExportFormat()) {
+      case PNG -> ".png";
+    };
+  }
+
+  private FileNameExtensionFilter getExportFormatFileNameExtensionFilter() {
+    return switch (getExportFormat()) {
+      case PNG -> new javax.swing.filechooser.FileNameExtensionFilter("PNG image (*.png)", "png");
+    };
+  }
+
   private Optional<Path> getExportPath() {
     final String exportPathString = exportPathTextField.getText().trim();
     if (exportPathString.isBlank()) {
@@ -123,27 +163,40 @@ public final class ExportDialog extends JDialog {
     }
   }
 
+  private void setDefaultExportPath() {
+    final Path qctFilePath = qctFileManager.getQctFilePath();
+    if (qctFilePath.getFileName() == null) return;
+    final String exportFormatExtension = getExportFormatExtension();
+    String fileName = qctFilePath.getFileName().toString();
+    final int dotIndex = fileName.lastIndexOf('.');
+    fileName = (dotIndex > 0) ? fileName.substring(0, dotIndex) : fileName;
+    final Path parent = qctFilePath.getParent() != null ? qctFilePath.getParent() : Path.of(".");
+    final Path outputPath = parent.resolve(fileName + exportFormatExtension);
+    exportPathTextField.setText(outputPath.toString());
+  }
+
   private void displayFormatOptions() {
-    optionsContainerPanel.removeAll();
+    optionsPanelHolder.removeAll();
     optionsPanel = null;
 
     optionsPanel = switch (getExportFormat()) {
       case PNG -> new PngExportOptionsPanel();
     };
 
-    optionsContainerPanel.add(optionsPanel);
-    optionsContainerPanel.revalidate();
-    optionsContainerPanel.repaint();
+    optionsPanelHolder.add(optionsPanel, BorderLayout.CENTER);
+    optionsPanelHolder.revalidate();
+    optionsPanelHolder.repaint();
     pack();
   }
 
   private void onExport() {
-    Preconditions.checkState(validateDialog());
     final ExportFormat exportFormat = getExportFormat();
     final Path exportPath = getExportPath().orElseThrow();
     final ConvertFormatOptions convertFormatOptions = optionsPanel != null ? optionsPanel.getConvertOptions() : null;
-    new ExportQctFileWorker(new ExportTask(exportFormat, exportPath, convertFormatOptions),
-                            qctModel.getQctFile().orElseThrow()).execute();
+    final ExportTask exportTask = switch (exportFormat) {
+      case PNG -> new PngExportTask(exportPath, qctFile, (PngConvertFormatOptions) convertFormatOptions);
+    };
+    exportManager.export(exportTask);
     dispose();
   }
 }

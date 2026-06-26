@@ -4,6 +4,7 @@
 
 package com.github.aleksikangas.qct.ui.toast;
 
+import com.github.aleksikangas.qct.ui.utils.ThreadUtils;
 import raven.modal.Toast;
 import raven.modal.toast.option.ToastLocation;
 
@@ -28,7 +29,7 @@ public final class QctToast {
   }
 
   public static void show(final Type type, final String message) {
-    Toast.show(getMainFrame(), type.toToastType(), message, ToastLocation.BOTTOM_TRAILING);
+    ThreadUtils.runOnEDT(() -> Toast.show(getMainFrame(), type.toToastType(), message, ToastLocation.BOTTOM_TRAILING));
   }
 
   private static Frame getMainFrame() {

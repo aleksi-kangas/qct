@@ -4,13 +4,12 @@
 
 package com.github.aleksikangas.qct.ui.meta;
 
-import com.github.aleksikangas.qct.core.QctFile;
 import com.github.aleksikangas.qct.core.meta.*;
-import com.github.aleksikangas.qct.ui.model.QctModel;
+import com.github.aleksikangas.qct.ui.file.QctFileManager;
+import com.github.aleksikangas.qct.ui.utils.ThreadUtils;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
-import java.util.Objects;
 
 public final class MetadataPanel extends JPanel {
   private final JTextField magicNumberField = new JTextField();
@@ -44,7 +43,7 @@ public final class MetadataPanel extends JPanel {
   private final MapOutlinePanel mapOutlinePanel = new MapOutlinePanel();
   // --- Extended Data ---
 
-  public MetadataPanel(final QctModel qctModel) {
+  public MetadataPanel(final QctFileManager qctFileManager) {
     super(new MigLayout("fill, insets 4 10 4 10, gap 10", "[][fill, grow]", ""));
     setBorder(BorderFactory.createTitledBorder("Metadata"));
 
@@ -153,16 +152,13 @@ public final class MetadataPanel extends JPanel {
     add(new JLabel("Map Outline:"));
     add(mapOutlinePanel, "wrap");
 
-    qctModel.addPropertyChangeListener(e -> {
-      if (Objects.equals(e.getPropertyName(), QctModel.QCT_FILE)) {
-        final QctFile qctFile = (QctFile) e.getNewValue();
-        if (qctFile != null) {
-          onMetadata(qctFile.metadata());
-        } else {
-          clear();
-        }
+    qctFileManager.addListener(qctFile -> ThreadUtils.runOnEDT(() -> {
+      if (qctFile != null) {
+        onMetadata(qctFile.metadata());
+      } else {
+        clear();
       }
-    });
+    }));
   }
 
   private void onMetadata(final Metadata metadata) {
