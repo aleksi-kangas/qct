@@ -4,6 +4,8 @@
 
 package com.github.aleksikangas.qct.core.interpolation;
 
+import com.github.aleksikangas.qct.core.interpolation.decoder.InterpolationMatrixDecoder;
+import com.github.aleksikangas.qct.core.interpolation.encoder.InterpolationMatrixEncoder;
 import com.github.aleksikangas.qct.core.utils.DirectQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
@@ -112,7 +114,7 @@ class InterpolationMatrixTest {
       final int[] expectedIndices = createTestMatrix();
       qctWriter.writeBytes(InterpolationMatrix.BYTE_OFFSET, expectedIndices);
 
-      final InterpolationMatrix matrix = InterpolationMatrix.Decoder.decode(qctReader);
+      final InterpolationMatrix matrix = InterpolationMatrixDecoder.decode(qctReader);
 
       assertArrayEquals(expectedIndices, matrix.indices());
     }
@@ -127,9 +129,9 @@ class InterpolationMatrixTest {
       final int[] data = createTestMatrix();
       final var matrix = new InterpolationMatrix(data);
 
-      InterpolationMatrix.Encoder.encode(qctWriter, matrix);
+      InterpolationMatrixEncoder.encode(qctWriter, matrix);
 
-      final InterpolationMatrix decoded = InterpolationMatrix.Decoder.decode(qctReader);
+      final InterpolationMatrix decoded = InterpolationMatrixDecoder.decode(qctReader);
 
       assertArrayEquals(data, decoded.indices());
     }
@@ -140,8 +142,8 @@ class InterpolationMatrixTest {
     final int[] originalData = createTestMatrix();
     final var originalMatrix = new InterpolationMatrix(originalData);
 
-    InterpolationMatrix.Encoder.encode(qctWriter, originalMatrix);
-    final InterpolationMatrix decodedMatrix = InterpolationMatrix.Decoder.decode(qctReader);
+    InterpolationMatrixEncoder.encode(qctWriter, originalMatrix);
+    final InterpolationMatrix decodedMatrix = InterpolationMatrixDecoder.decode(qctReader);
 
     assertEquals(originalMatrix, decodedMatrix);
     assertArrayEquals(originalData, decodedMatrix.indices());

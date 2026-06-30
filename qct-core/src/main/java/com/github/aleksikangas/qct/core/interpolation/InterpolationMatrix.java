@@ -4,8 +4,6 @@
 
 package com.github.aleksikangas.qct.core.interpolation;
 
-import com.github.aleksikangas.qct.core.utils.QctReader;
-import com.github.aleksikangas.qct.core.utils.QctWriter;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
@@ -69,23 +67,5 @@ public record InterpolationMatrix(int[] indices) {
 
   public int paletteIndexOf(final int yColorIndex, final int xColorIndex) {
     return indices[offsetOf(yColorIndex, xColorIndex)];
-  }
-
-  public static final class Decoder {
-    public static InterpolationMatrix decode(final QctReader qctReader) {
-      return new InterpolationMatrix(qctReader.readBytes(InterpolationMatrix.BYTE_OFFSET, InterpolationMatrix.SIZE));
-    }
-
-    private Decoder() {
-    }
-  }
-
-  public static final class Encoder {
-    public static void encode(final QctWriter qctWriter, final InterpolationMatrix interpolationMatrix) {
-      qctWriter.writeBytes(InterpolationMatrix.BYTE_OFFSET, interpolationMatrix.indices);
-    }
-
-    private Encoder() {
-    }
   }
 }
