@@ -5,6 +5,7 @@
 package com.github.aleksikangas.qct.ui.file;
 
 import com.github.aleksikangas.qct.core.QctFile;
+import com.github.aleksikangas.qct.core.decoder.QctFileDecoder;
 import com.github.aleksikangas.qct.core.exception.QctRuntimeException;
 import com.github.aleksikangas.qct.ui.toast.QctToast;
 
@@ -96,7 +97,7 @@ public final class QctFileManager {
 
   private QctFile decodeQctFile(final Path qctFilePath) throws IOException, QctRuntimeException {
     try (final var readFileChannel = FileChannel.open(qctFilePath, Set.of(StandardOpenOption.READ))) {
-      return QctFile.Decoder.decode(readFileChannel);
+      return QctFileDecoder.decode(readFileChannel);
     }
   }
 
