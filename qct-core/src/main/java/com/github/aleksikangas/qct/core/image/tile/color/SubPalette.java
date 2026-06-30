@@ -7,9 +7,6 @@ package com.github.aleksikangas.qct.core.image.tile.color;
 import com.github.aleksikangas.qct.core.color.Palette;
 import com.github.aleksikangas.qct.core.image.tile.ImageTile;
 import com.github.aleksikangas.qct.core.image.tile.ImageTile.Encoding;
-import com.github.aleksikangas.qct.core.utils.QctReader;
-import com.github.aleksikangas.qct.core.utils.QctWriter;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
@@ -106,7 +103,7 @@ public record SubPalette(Encoding encoding,
     return forEncoding(imageTile, Encoding.RUN_LENGTH_ENCODING);
   }
 
-  private static SubPalette forEncoding(final ImageTile imageTile, final Encoding encoding) {
+  public static SubPalette forEncoding(final ImageTile imageTile, final Encoding encoding) {
     final Set<Integer> uniquePaletteIndices = new LinkedHashSet<>();
     for (int y = 0; y < ImageTile.HEIGHT; ++y) {
       for (int x = 0; x < ImageTile.WIDTH; ++x) {
@@ -118,40 +115,5 @@ public record SubPalette(Encoding encoding,
     final int[] paletteIndices = uniquePaletteIndices.stream().mapToInt(Integer::intValue).toArray();
     Arrays.sort(paletteIndices);
     return new SubPalette(encoding, paletteIndices);
-  }
-
-  public static final class Decoder {
-    public static SubPalette decode(final QctReader qctReader, final Encoding encoding, final int byteOffset) {
-      final int size = switch (encoding) {
-        case RUN_LENGTH_ENCODING -> qctReader.readByte(byteOffset);
-        case PIXEL_PACKING -> 256 - qctReader.readByte(byteOffset);
-        default -> throw new IllegalStateException("Unsupported encoding " + encoding);
-      };
-      final int[] paletteIndices = qctReader.readBytes(byteOffset + 0x01, size);
-      return new SubPalette(encoding, paletteIndices);
-    }
-
-    private Decoder() {
-    }
-  }
-
-  public static final class Encoder {
-    public static void encode(final QctWriter qctWriter, final SubPalette subPalette, final int byteOffset) {
-      qctWriter.writeByte(byteOffset, subPalette.sizeByte());
-      qctWriter.writeBytes(byteOffset + 0x01, subPalette.paletteIndices());
-    }
-
-    @VisibleForTesting
-    static SubPalette encode(final QctWriter qctWriter,
-                             final ImageTile imageTile,
-                             final Encoding encoding,
-                             final int byteOffset) {
-      final var subPalette = SubPalette.forEncoding(imageTile, encoding);
-      encode(qctWriter, subPalette, byteOffset);
-      return subPalette;
-    }
-
-    private Encoder() {
-    }
   }
 }

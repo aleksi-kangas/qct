@@ -5,12 +5,6 @@
 package com.github.aleksikangas.qct.core.image.tile;
 
 import com.github.aleksikangas.qct.core.color.Palette;
-import com.github.aleksikangas.qct.core.image.tile.huffman.HuffmanDecoder;
-import com.github.aleksikangas.qct.core.image.tile.rle.RleDecoder;
-import com.github.aleksikangas.qct.core.image.tile.utils.ImageTileEncodingChooser;
-import com.github.aleksikangas.qct.core.image.tile.utils.ImageTileInterlacer;
-import com.github.aleksikangas.qct.core.utils.QctReader;
-import com.github.aleksikangas.qct.core.utils.QctWriter;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
@@ -85,57 +79,5 @@ public record ImageTile(Encoding encoding,
    */
   public Color pixelColor(final Palette palette, final int y, final int x) {
     return palette.color(pixelPaletteIndex(y, x));
-  }
-
-  public static final class Decoder {
-    public static ImageTile decode(final QctReader qctReader, final int byteOffset) {
-      final Encoding encoding = encodingOf(qctReader, byteOffset);
-      final ImageTile decodedImageTile = switch (encoding) {
-        case HUFFMAN_CODING -> HuffmanDecoder.decode(qctReader, byteOffset);
-        case PIXEL_PACKING -> placeholderImageTile(Encoding.PIXEL_PACKING);
-        case RUN_LENGTH_ENCODING -> RleDecoder.decode(qctReader, byteOffset);
-      };
-      return new ImageTile(decodedImageTile.encoding,
-                           ImageTileInterlacer.deinterlaceRows(decodedImageTile.paletteIndices));
-    }
-
-    private static Encoding encodingOf(final QctReader qctReader, final int byteOffset) {
-      final int firstByte = qctReader.readByte(byteOffset);
-      if (firstByte == 0 || firstByte == 255) {
-        return Encoding.HUFFMAN_CODING;
-      }
-      if (firstByte > 127) {
-        return Encoding.PIXEL_PACKING;
-      }
-      return Encoding.RUN_LENGTH_ENCODING;
-    }
-
-    private Decoder() {
-    }
-  }
-
-  public static final class Encoder {
-    public static int encode(final QctWriter qctWriter, final ImageTile imageTile) {
-      Objects.requireNonNull(imageTile);
-      final ImageTile interlacedImageTile = new ImageTile(imageTile.encoding(),
-                                                          ImageTileInterlacer.interlaceRows(imageTile.paletteIndices()));
-      final ImageTileEncodingCandidate bestCandidate = ImageTileEncodingChooser.chooseEncoding(interlacedImageTile);
-      final int tileByteOffset = qctWriter.allocate(bestCandidate.sizeBytes());
-      bestCandidate.encode(qctWriter, tileByteOffset);
-      return tileByteOffset;
-    }
-
-    private Encoder() {
-    }
-  }
-
-  private static ImageTile placeholderImageTile(final Encoding encoding) {
-    final var paletteIndices = new int[ImageTile.HEIGHT][ImageTile.WIDTH];
-    for (int y = 0; y < ImageTile.HEIGHT; ++y) {
-      for (int x = 0; x < ImageTile.WIDTH; ++x) {
-        paletteIndices[y][x] = 0;
-      }
-    }
-    return new ImageTile(encoding, paletteIndices);
   }
 }

@@ -6,6 +6,7 @@ package com.github.aleksikangas.qct.core.image.tile.rle;
 
 import com.github.aleksikangas.qct.core.image.tile.ImageTile;
 import com.github.aleksikangas.qct.core.image.tile.color.SubPalette;
+import com.github.aleksikangas.qct.core.image.tile.color.decoder.SubPaletteDecoder;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 
 /**
@@ -15,9 +16,9 @@ import com.github.aleksikangas.qct.core.utils.QctReader;
  */
 public final class RleDecoder {
   public static ImageTile decode(final QctReader qctReader, final int byteOffset) {
-    final SubPalette subPalette = SubPalette.Decoder.decode(qctReader,
-                                                            ImageTile.Encoding.RUN_LENGTH_ENCODING,
-                                                            byteOffset);
+    final SubPalette subPalette = SubPaletteDecoder.decode(qctReader,
+                                                           ImageTile.Encoding.RUN_LENGTH_ENCODING,
+                                                           byteOffset);
     final int pixelDataOffset = Math.toIntExact(byteOffset + 0x01L + subPalette.size());
     final int[][] paletteIndices = decodePixelData(qctReader, subPalette, pixelDataOffset);
     return new ImageTile(ImageTile.Encoding.RUN_LENGTH_ENCODING, paletteIndices);

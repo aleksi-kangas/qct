@@ -5,6 +5,8 @@
 package com.github.aleksikangas.qct.core.image.tile.color;
 
 import com.github.aleksikangas.qct.core.image.tile.ImageTile;
+import com.github.aleksikangas.qct.core.image.tile.color.decoder.SubPaletteDecoder;
+import com.github.aleksikangas.qct.core.image.tile.color.encoder.SubPaletteEncoder;
 import com.github.aleksikangas.qct.core.utils.DirectQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
@@ -135,7 +137,7 @@ class SubPaletteTest {
       qctWriter.writeByte(0, 3);
       qctWriter.writeBytes(1, expectedIndices);
 
-      final SubPalette subPalette = SubPalette.Decoder.decode(qctReader, Encoding.RUN_LENGTH_ENCODING, 0);
+      final SubPalette subPalette = SubPaletteDecoder.decode(qctReader, Encoding.RUN_LENGTH_ENCODING, 0);
 
       assertEquals(Encoding.RUN_LENGTH_ENCODING, subPalette.encoding());
       assertEquals(3, subPalette.size());
@@ -148,7 +150,7 @@ class SubPaletteTest {
       qctWriter.writeByte(0, 256 - 4);  // sizeByte = 252 → size = 4
       qctWriter.writeBytes(1, expectedIndices);
 
-      final SubPalette subPalette = SubPalette.Decoder.decode(qctReader, Encoding.PIXEL_PACKING, 0);
+      final SubPalette subPalette = SubPaletteDecoder.decode(qctReader, Encoding.PIXEL_PACKING, 0);
 
       assertEquals(Encoding.PIXEL_PACKING, subPalette.encoding());
       assertEquals(4, subPalette.size());
@@ -162,7 +164,7 @@ class SubPaletteTest {
       qctWriter.writeByte(offset, 2);
       qctWriter.writeBytes(offset + 1, indices);
 
-      final SubPalette subPalette = SubPalette.Decoder.decode(qctReader, Encoding.RUN_LENGTH_ENCODING, offset);
+      final SubPalette subPalette = SubPaletteDecoder.decode(qctReader, Encoding.RUN_LENGTH_ENCODING, offset);
 
       assertEquals(2, subPalette.size());
       assertArrayEquals(indices, subPalette.paletteIndices());
@@ -177,8 +179,8 @@ class SubPaletteTest {
       final ImageTile tile = createTestImageTile(Encoding.RUN_LENGTH_ENCODING,
                                                  new int[][]{ { 0, 5, 0 }, { 5, 10, 5 } });
 
-      SubPalette.Encoder.encode(qctWriter, tile, Encoding.RUN_LENGTH_ENCODING, 200);
-      final SubPalette decodedSubPalette = SubPalette.Decoder.decode(qctReader, Encoding.RUN_LENGTH_ENCODING, 200);
+      SubPaletteEncoder.encode(qctWriter, tile, Encoding.RUN_LENGTH_ENCODING, 200);
+      final SubPalette decodedSubPalette = SubPaletteDecoder.decode(qctReader, Encoding.RUN_LENGTH_ENCODING, 200);
 
       assertEquals(3, decodedSubPalette.size()); // 0,5,10
       assertArrayEquals(new int[]{ 0, 5, 10 }, decodedSubPalette.paletteIndices());
@@ -194,11 +196,11 @@ class SubPaletteTest {
                                                          createUniformTileData(0, 1, 2, 3));
 
       final int byteOffset = 150;
-      final SubPalette writtenSubPalette = SubPalette.Encoder.encode(qctWriter,
-                                                                     originalTile,
-                                                                     Encoding.RUN_LENGTH_ENCODING,
-                                                                     byteOffset);
-      final SubPalette readSubPalette = SubPalette.Decoder.decode(qctReader, Encoding.RUN_LENGTH_ENCODING, byteOffset);
+      final SubPalette writtenSubPalette = SubPaletteEncoder.encode(qctWriter,
+                                                                    originalTile,
+                                                                    Encoding.RUN_LENGTH_ENCODING,
+                                                                    byteOffset);
+      final SubPalette readSubPalette = SubPaletteDecoder.decode(qctReader, Encoding.RUN_LENGTH_ENCODING, byteOffset);
 
       assertEquals(writtenSubPalette, readSubPalette);
       assertArrayEquals(writtenSubPalette.paletteIndices(), readSubPalette.paletteIndices());

@@ -12,6 +12,8 @@ import com.github.aleksikangas.qct.core.georef.GeoreferencingCoefficients;
 import com.github.aleksikangas.qct.core.georef.decoder.GeoreferencingCoefficientsDecoder;
 import com.github.aleksikangas.qct.core.georef.encoder.GeoreferencingCoefficientsEncoder;
 import com.github.aleksikangas.qct.core.image.ImageIndex;
+import com.github.aleksikangas.qct.core.image.decoder.ImageIndexDecoder;
+import com.github.aleksikangas.qct.core.image.encoder.ImageIndexEncoder;
 import com.github.aleksikangas.qct.core.interpolation.InterpolationMatrix;
 import com.github.aleksikangas.qct.core.interpolation.decoder.InterpolationMatrixDecoder;
 import com.github.aleksikangas.qct.core.interpolation.encoder.InterpolationMatrixEncoder;
@@ -147,7 +149,7 @@ public record QctFile(Metadata metadata,
                          GeoreferencingCoefficientsDecoder.decode(qctReader),
                          PaletteDecoder.decode(qctReader),
                          InterpolationMatrixDecoder.decode(qctReader),
-                         ImageIndex.Decoder.decode(qctReader, metadata));
+                         ImageIndexDecoder.decode(qctReader, metadata));
     }
 
     private Decoder() {
@@ -162,7 +164,7 @@ public record QctFile(Metadata metadata,
       GeoreferencingCoefficientsEncoder.encode(qctWriter, qctFile.georeferencingCoefficients);
       PaletteEncoder.encode(qctWriter, qctFile.palette);
       InterpolationMatrixEncoder.encode(qctWriter, qctFile.interpolationMatrix);
-      ImageIndex.Encoder.encode(qctWriter, qctFile.imageIndex, qctFile.metadata);
+      ImageIndexEncoder.encode(qctWriter, qctFile.imageIndex, qctFile.metadata);
     }
 
     private Encoder() {

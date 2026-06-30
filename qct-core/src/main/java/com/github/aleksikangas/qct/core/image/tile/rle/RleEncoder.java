@@ -7,6 +7,7 @@ package com.github.aleksikangas.qct.core.image.tile.rle;
 import com.github.aleksikangas.qct.core.image.tile.ImageTile;
 import com.github.aleksikangas.qct.core.image.tile.ImageTileEncodingCandidate;
 import com.github.aleksikangas.qct.core.image.tile.color.SubPalette;
+import com.github.aleksikangas.qct.core.image.tile.color.encoder.SubPaletteEncoder;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 
 import javax.annotation.Nonnull;
@@ -44,7 +45,7 @@ public final class RleEncoder {
 
     @Override
     public void encode(final QctWriter qctWriter, final int byteOffset) {
-      SubPalette.Encoder.encode(qctWriter, subPalette, byteOffset);
+      SubPaletteEncoder.encode(qctWriter, subPalette, byteOffset);
       final int pixelDataOffset = Math.toIntExact(byteOffset + 0x01L + subPalette.size());
       qctWriter.writeBytes(pixelDataOffset, pixelBytes);
     }
