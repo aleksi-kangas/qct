@@ -4,12 +4,6 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
-import com.github.aleksikangas.qct.core.utils.QctReader;
-import com.github.aleksikangas.qct.core.utils.QctWriter;
-
-import java.util.EnumSet;
-import java.util.Set;
-
 /**
  * <pre>
  * +--------+-------------------+---------------------------------+
@@ -35,35 +29,5 @@ public enum Flag {
 
   public int mask() {
     return mask;
-  }
-
-  public static final class Decoder {
-    public static Set<Flag> decode(final QctReader qctReader, final int byteOffset) {
-      final int value = qctReader.readInt(byteOffset);
-      final Set<Flag> flags = EnumSet.noneOf(Flag.class);
-      if ((value & MUST_HAVE_ORIGINAL_FILE.mask) != 0) {
-        flags.add(MUST_HAVE_ORIGINAL_FILE);
-      }
-      if ((value & ALLOW_CALIBRATION.mask) != 0) {
-        flags.add(ALLOW_CALIBRATION);
-      }
-      return flags;
-    }
-
-    private Decoder() {
-    }
-  }
-
-  public static final class Encoder {
-    public static void encode(final QctWriter qctWriter, final Set<Flag> flags, final int byteOffset) {
-      int bitField = 0;
-      for (Flag flag : flags) {
-        bitField |= flag.mask();
-      }
-      qctWriter.writeInt(byteOffset, bitField);
-    }
-
-    private Encoder() {
-    }
   }
 }

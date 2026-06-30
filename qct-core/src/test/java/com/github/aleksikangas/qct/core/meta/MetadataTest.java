@@ -4,6 +4,8 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
+import com.github.aleksikangas.qct.core.meta.decoder.MetadataDecoder;
+import com.github.aleksikangas.qct.core.meta.encoder.MetadataEncoder;
 import com.github.aleksikangas.qct.core.utils.DirectQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
@@ -69,7 +71,7 @@ class MetadataTest {
                         "Depths",
                         "Heights",
                         "Projection",
-                        Set.of(),
+                        Set.of(Flag.MUST_HAVE_ORIGINAL_FILE),
                         "OriginalFile.qc3",
                         12345,
                         Instant.ofEpochSecond(1_650_000_000L),
@@ -81,9 +83,9 @@ class MetadataTest {
   void encodeDecodeRoundTrip() {
     final Metadata original = createSampleMetadata();
 
-    Metadata.Encoder.encode(qctWriter, original);
+    MetadataEncoder.encode(qctWriter, original);
 
-    final Metadata decoded = Metadata.Decoder.decode(qctReader);
+    final Metadata decoded = MetadataDecoder.decode(qctReader);
 
     assertEquals(original.magicNumber(), decoded.magicNumber());
     assertEquals(original.fileFormatVersion(), decoded.fileFormatVersion());

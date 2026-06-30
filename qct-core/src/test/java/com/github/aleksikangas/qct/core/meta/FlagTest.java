@@ -4,6 +4,8 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
+import com.github.aleksikangas.qct.core.meta.decoder.FlagDecoder;
+import com.github.aleksikangas.qct.core.meta.encoder.FlagEncoder;
 import com.github.aleksikangas.qct.core.utils.DirectQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
@@ -45,16 +47,16 @@ class FlagTest {
     @Test
     void encodeAndDecodeNoFlags() {
       final Set<Flag> flags = EnumSet.noneOf(Flag.class);
-      Flag.Encoder.encode(qctWriter, flags, 0);
-      final Set<Flag> decoded = Flag.Decoder.decode(qctReader, 0);
+      FlagEncoder.encode(qctWriter, flags, 0);
+      final Set<Flag> decoded = FlagDecoder.decode(qctReader, 0);
       assertTrue(decoded.isEmpty());
     }
 
     @Test
     void encodeAndDecodeSingleFlag() {
       final Set<Flag> flags = EnumSet.of(Flag.MUST_HAVE_ORIGINAL_FILE);
-      Flag.Encoder.encode(qctWriter, flags, 0);
-      final Set<Flag> decoded = Flag.Decoder.decode(qctReader, 0);
+      FlagEncoder.encode(qctWriter, flags, 0);
+      final Set<Flag> decoded = FlagDecoder.decode(qctReader, 0);
 
       assertEquals(1, decoded.size());
       assertTrue(decoded.contains(Flag.MUST_HAVE_ORIGINAL_FILE));
@@ -64,8 +66,8 @@ class FlagTest {
     @Test
     void encodeAndDecodeBothFlags() {
       final Set<Flag> flags = EnumSet.of(Flag.MUST_HAVE_ORIGINAL_FILE, Flag.ALLOW_CALIBRATION);
-      Flag.Encoder.encode(qctWriter, flags, 0);
-      final Set<Flag> decoded = Flag.Decoder.decode(qctReader, 0);
+      FlagEncoder.encode(qctWriter, flags, 0);
+      final Set<Flag> decoded = FlagDecoder.decode(qctReader, 0);
       assertEquals(2, decoded.size());
       assertTrue(decoded.contains(Flag.MUST_HAVE_ORIGINAL_FILE));
       assertTrue(decoded.contains(Flag.ALLOW_CALIBRATION));
@@ -75,8 +77,8 @@ class FlagTest {
     void encodeAndDecodeLargeOffset() {
       final Set<Flag> flags = EnumSet.of(Flag.ALLOW_CALIBRATION);
       final int offset = 1024 * 1024; // 1MB offset
-      Flag.Encoder.encode(qctWriter, flags, offset);
-      final Set<Flag> decoded = Flag.Decoder.decode(qctReader, offset);
+      FlagEncoder.encode(qctWriter, flags, offset);
+      final Set<Flag> decoded = FlagDecoder.decode(qctReader, offset);
       assertEquals(EnumSet.of(Flag.ALLOW_CALIBRATION), decoded);
     }
   }
@@ -88,21 +90,21 @@ class FlagTest {
     @Test
     void decodeOnlyMustHaveOriginalFile() {
       qctWriter.writeInt(0, 1); // bit 0 set
-      final Set<Flag> decoded = Flag.Decoder.decode(qctReader, 0);
+      final Set<Flag> decoded = FlagDecoder.decode(qctReader, 0);
       assertEquals(EnumSet.of(Flag.MUST_HAVE_ORIGINAL_FILE), decoded);
     }
 
     @Test
     void decodeOnlyAllowCalibration() {
       qctWriter.writeInt(0, 2); // bit 1 set
-      final Set<Flag> decoded = Flag.Decoder.decode(qctReader, 0);
+      final Set<Flag> decoded = FlagDecoder.decode(qctReader, 0);
       assertEquals(EnumSet.of(Flag.ALLOW_CALIBRATION), decoded);
     }
 
     @Test
     void decodeUnknownBitsAreIgnored() {
       qctWriter.writeInt(0, 0b1111_1111); // all bits set
-      final Set<Flag> decoded = Flag.Decoder.decode(qctReader, 0);
+      final Set<Flag> decoded = FlagDecoder.decode(qctReader, 0);
       assertTrue(decoded.contains(Flag.MUST_HAVE_ORIGINAL_FILE));
       assertTrue(decoded.contains(Flag.ALLOW_CALIBRATION));
     }
@@ -114,7 +116,7 @@ class FlagTest {
     @Test
     void encodeEmptySetWritesZero() {
       final Set<Flag> flags = EnumSet.noneOf(Flag.class);
-      Flag.Encoder.encode(qctWriter, flags, 0);
+      FlagEncoder.encode(qctWriter, flags, 0);
       final int rawValue = qctReader.readInt(0);
       assertEquals(0, rawValue);
     }
@@ -124,8 +126,8 @@ class FlagTest {
   void roundTripAllCombinations() {
     final Set<Flag> original = EnumSet.of(Flag.MUST_HAVE_ORIGINAL_FILE, Flag.ALLOW_CALIBRATION);
     final int byteOffset = 0x40;
-    Flag.Encoder.encode(qctWriter, original, byteOffset);
-    final Set<Flag> decoded = Flag.Decoder.decode(qctReader, byteOffset);
+    FlagEncoder.encode(qctWriter, original, byteOffset);
+    final Set<Flag> decoded = FlagDecoder.decode(qctReader, byteOffset);
     assertEquals(original, decoded);
   }
 }

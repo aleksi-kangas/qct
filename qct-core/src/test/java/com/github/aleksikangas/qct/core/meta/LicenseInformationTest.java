@@ -4,6 +4,8 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
+import com.github.aleksikangas.qct.core.meta.decoder.LicenseInformationDecoder;
+import com.github.aleksikangas.qct.core.meta.encoder.LicenseInformationEncoder;
 import com.github.aleksikangas.qct.core.utils.DirectQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
@@ -91,7 +93,7 @@ class LicenseInformationTest {
       qctWriter.writePointer(Math.toIntExact(byteOffset + 0x10L), serialPtr);
       qctWriter.writeBytes(serialPtr, serial);
 
-      final LicenseInformation decoded = LicenseInformation.Decoder.decode(qctReader, byteOffset);
+      final LicenseInformation decoded = LicenseInformationDecoder.decode(qctReader, byteOffset);
 
       assertEquals(12345, decoded.identifier());
       assertArrayEquals(serial, decoded.serialNumber().bytes());
@@ -108,7 +110,7 @@ class LicenseInformationTest {
       qctWriter.writePointer(byteOffset + 0x10, serialPtr);
       qctWriter.writeBytes(serialPtr, serialBytes());
 
-      final LicenseInformation decoded = LicenseInformation.Decoder.decode(qctReader, byteOffset);
+      final LicenseInformation decoded = LicenseInformationDecoder.decode(qctReader, byteOffset);
 
       assertEquals(42, decoded.identifier());
     }
@@ -121,8 +123,8 @@ class LicenseInformationTest {
     void encode() {
       final var original = createSample();
 
-      LicenseInformation.Encoder.encode(qctWriter, original, 0);
-      final var decoded = LicenseInformation.Decoder.decode(qctReader, 0);
+      LicenseInformationEncoder.encode(qctWriter, original, 0);
+      final var decoded = LicenseInformationDecoder.decode(qctReader, 0);
 
       assertEquals(original.identifier(), decoded.identifier());
       assertEquals(original.serialNumber(), decoded.serialNumber());
@@ -132,7 +134,7 @@ class LicenseInformationTest {
     void zeroPadding() {
       final var original = createSample();
 
-      LicenseInformation.Encoder.encode(qctWriter, original, 0);
+      LicenseInformationEncoder.encode(qctWriter, original, 0);
 
       // 16 bytes at 0x18
       for (int i = 0; i < 16; i++) {
@@ -151,8 +153,8 @@ class LicenseInformationTest {
     final int byteOffset = 0;
     final var original = createSample();
 
-    LicenseInformation.Encoder.encode(qctWriter, original, byteOffset);
-    final var decoded = LicenseInformation.Decoder.decode(qctReader, byteOffset);
+    LicenseInformationEncoder.encode(qctWriter, original, byteOffset);
+    final var decoded = LicenseInformationDecoder.decode(qctReader, byteOffset);
 
     assertEquals(original, decoded);
   }

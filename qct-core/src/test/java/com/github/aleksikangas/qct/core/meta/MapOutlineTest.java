@@ -4,6 +4,8 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
+import com.github.aleksikangas.qct.core.meta.decoder.MapOutlineDecoder;
+import com.github.aleksikangas.qct.core.meta.encoder.MapOutlineEncoder;
 import com.github.aleksikangas.qct.core.utils.DirectQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
@@ -105,7 +107,7 @@ class MapOutlineTest {
         qctWriter.writeDouble(pointOffset + 8, expectedPoints[i].longitude());
       }
 
-      final MapOutline mapOutline = MapOutline.Decoder.decode(qctReader, 0);
+      final MapOutline mapOutline = MapOutlineDecoder.decode(qctReader, 0);
 
       assertEquals(expectedPoints.length, mapOutline.points().length);
       for (int i = 0; i < expectedPoints.length; ++i) {
@@ -128,7 +130,7 @@ class MapOutlineTest {
         qctWriter.writeDouble(pointOffset + 8, points[i].longitude());
       }
 
-      final MapOutline mapOutline = MapOutline.Decoder.decode(qctReader, baseOffset);
+      final MapOutline mapOutline = MapOutlineDecoder.decode(qctReader, baseOffset);
 
       assertEquals(points.length, mapOutline.points().length);
     }
@@ -138,7 +140,7 @@ class MapOutlineTest {
       qctWriter.writeInt(0, 0);
       qctWriter.writePointer(4, 16);
 
-      final MapOutline mapOutline = MapOutline.Decoder.decode(qctReader, 0);
+      final MapOutline mapOutline = MapOutlineDecoder.decode(qctReader, 0);
 
       assertEquals(0, mapOutline.points().length);
     }
@@ -152,16 +154,16 @@ class MapOutlineTest {
       final MapOutline.Point[] points = { new MapOutline.Point(60.1699, 24.9384),
                                           new MapOutline.Point(61.4978, 23.7608) };
       final var mapOutline = new MapOutline(points);
-      MapOutline.Encoder.encode(qctWriter, mapOutline, 0);
-      final MapOutline decoded = MapOutline.Decoder.decode(qctReader, 0);
+      MapOutlineEncoder.encode(qctWriter, mapOutline, 0);
+      final MapOutline decoded = MapOutlineDecoder.decode(qctReader, 0);
       assertEquals(mapOutline, decoded);
     }
 
     @Test
     void encodeEmpty() {
       final var mapOutline = new MapOutline(new MapOutline.Point[0]);
-      MapOutline.Encoder.encode(qctWriter, mapOutline, 0);
-      final MapOutline decoded = MapOutline.Decoder.decode(qctReader, 0);
+      MapOutlineEncoder.encode(qctWriter, mapOutline, 0);
+      final MapOutline decoded = MapOutlineDecoder.decode(qctReader, 0);
       assertEquals(0, decoded.points().length);
     }
   }
@@ -173,8 +175,8 @@ class MapOutlineTest {
                                                 new MapOutline.Point(60.16985, 24.93838),
                                                 new MapOutline.Point(61.05437, 28.18871) };
     final var mapOutline = new MapOutline(originalPoints);
-    MapOutline.Encoder.encode(qctWriter, mapOutline, byteOffset);
-    final MapOutline decoded = MapOutline.Decoder.decode(qctReader, byteOffset);
+    MapOutlineEncoder.encode(qctWriter, mapOutline, byteOffset);
+    final MapOutline decoded = MapOutlineDecoder.decode(qctReader, byteOffset);
     assertEquals(mapOutline, decoded);
   }
 }

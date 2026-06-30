@@ -4,6 +4,8 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
+import com.github.aleksikangas.qct.core.meta.decoder.ExtendedDataDecoder;
+import com.github.aleksikangas.qct.core.meta.encoder.ExtendedDataEncoder;
 import com.github.aleksikangas.qct.core.utils.DirectQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
@@ -103,8 +105,8 @@ class ExtendedDataTest {
     void encodeDecode() {
       final var original = createSample();
 
-      ExtendedData.Encoder.encode(qctWriter, original, 0);
-      final var decoded = ExtendedData.Decoder.decode(qctReader, 0);
+      ExtendedDataEncoder.encode(qctWriter, original, 0);
+      final var decoded = ExtendedDataDecoder.decode(qctReader, 0);
 
       assertEquals(original.mapType(), decoded.mapType());
       assertEquals(original.datumShift(), decoded.datumShift());
@@ -119,8 +121,8 @@ class ExtendedDataTest {
       final int offset = 1024 * 1024;
       final var original = createSample();
 
-      ExtendedData.Encoder.encode(qctWriter, original, offset);
-      final var decoded = ExtendedData.Decoder.decode(qctReader, offset);
+      ExtendedDataEncoder.encode(qctWriter, original, offset);
+      final var decoded = ExtendedDataDecoder.decode(qctReader, offset);
 
       assertEquals(original.mapType(), decoded.mapType());
       assertEquals(original.datumShift(), decoded.datumShift());
@@ -131,8 +133,8 @@ class ExtendedDataTest {
   void roundTrip() {
     final var original = createSample();
 
-    ExtendedData.Encoder.encode(qctWriter, original, 0);
-    final var decoded = ExtendedData.Decoder.decode(qctReader, 0);
+    ExtendedDataEncoder.encode(qctWriter, original, 0);
+    final var decoded = ExtendedDataDecoder.decode(qctReader, 0);
 
     assertEquals(original.mapType(), decoded.mapType());
     assertEquals(original.datumShift(), decoded.datumShift());

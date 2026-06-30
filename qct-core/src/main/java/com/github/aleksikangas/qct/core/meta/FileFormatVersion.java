@@ -4,12 +4,6 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
-import com.github.aleksikangas.qct.core.utils.QctReader;
-import com.github.aleksikangas.qct.core.utils.QctWriter;
-
-import java.util.Arrays;
-import java.util.Objects;
-
 /**
  * <pre>
  * +--------+-----------+--------------------------------------------------------+
@@ -46,31 +40,5 @@ public enum FileFormatVersion {
       case QUICK_CHART_SUPPORTING_LICENSE_MANAGEMENT -> "Quick Chart supporting License Management";
       case QC3 -> "QC3 Format";
     };
-  }
-
-  public static final class Decoder {
-    public static FileFormatVersion decode(final QctReader qctReader, final int byteOffset) {
-      final int value = qctReader.readInt(byteOffset);
-      return Arrays.stream(FileFormatVersion.values())
-                   .filter(f -> f.value == value)
-                   .findFirst()
-                   .orElseThrow(() -> new IllegalArgumentException(String.format("Unknown FileFormatVersion: %d",
-                                                                                 value)));
-    }
-
-    private Decoder() {
-    }
-  }
-
-  public static final class Encoder {
-    public static void encode(final QctWriter qctWriter,
-                              final FileFormatVersion fileFormatVersion,
-                              final int byteOffset) {
-      Objects.requireNonNull(fileFormatVersion);
-      qctWriter.writeInt(byteOffset, fileFormatVersion.value);
-    }
-
-    private Encoder() {
-    }
   }
 }

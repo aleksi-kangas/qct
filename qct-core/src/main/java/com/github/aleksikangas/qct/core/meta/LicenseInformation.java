@@ -4,9 +4,6 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
-import com.github.aleksikangas.qct.core.utils.QctReader;
-import com.github.aleksikangas.qct.core.utils.QctWriter;
-
 import java.util.Objects;
 
 /**
@@ -32,45 +29,5 @@ public record LicenseInformation(int identifier,
 
   public LicenseInformation {
     Objects.requireNonNull(serialNumber);
-  }
-
-  public static final class Decoder {
-    public static LicenseInformation decode(final QctReader qctReader, final int byteOffset) {
-      return new LicenseInformation(qctReader.readInt(byteOffset),
-                                    SerialNumber.Decoder.decodeFromPointer(qctReader,
-                                                                           Math.toIntExact(byteOffset + 0x10L)));
-    }
-
-    public static LicenseInformation decodeFromPointer(final QctReader qctReader, final int byteOffset) {
-      final int pointer = qctReader.readPointer(byteOffset);
-      return decode(qctReader, pointer);
-    }
-
-    private Decoder() {
-    }
-  }
-
-  public static final class Encoder {
-    public static void encode(final QctWriter qctWriter,
-                              final LicenseInformation licenseInformation,
-                              final int byteOffset) {
-      Objects.requireNonNull(licenseInformation);
-
-      qctWriter.writeInt(byteOffset, licenseInformation.identifier());
-      SerialNumber.Encoder.encodeWithPointer(qctWriter,
-                                             licenseInformation.serialNumber,
-                                             Math.toIntExact(byteOffset + 0x10L));
-    }
-
-    public static void encodeWithPointer(final QctWriter qctWriter,
-                                         final LicenseInformation licenseInformation,
-                                         final int byteOffset) {
-      final int pointer = qctWriter.allocate(LicenseInformation.HEADER_SIZE);
-      qctWriter.writePointer(byteOffset, pointer);
-      encode(qctWriter, licenseInformation, pointer);
-    }
-
-    private Encoder() {
-    }
   }
 }

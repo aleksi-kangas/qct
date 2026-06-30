@@ -4,6 +4,8 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
+import com.github.aleksikangas.qct.core.meta.decoder.FileFormatVersionDecoder;
+import com.github.aleksikangas.qct.core.meta.encoder.FileFormatVersionEncoder;
 import com.github.aleksikangas.qct.core.utils.DirectQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
@@ -62,21 +64,21 @@ class FileFormatVersionTest {
     @Test
     void decodeQuickChart() {
       qctWriter.writeInt(0, 0x00000002);
-      final FileFormatVersion version = FileFormatVersion.Decoder.decode(qctReader, 0);
+      final FileFormatVersion version = FileFormatVersionDecoder.decode(qctReader, 0);
       assertEquals(FileFormatVersion.QUICK_CHART, version);
     }
 
     @Test
     void decodeQuickChartWithLicenseManagement() {
       qctWriter.writeInt(0, 0x00000004);
-      final FileFormatVersion version = FileFormatVersion.Decoder.decode(qctReader, 0);
+      final FileFormatVersion version = FileFormatVersionDecoder.decode(qctReader, 0);
       assertEquals(FileFormatVersion.QUICK_CHART_SUPPORTING_LICENSE_MANAGEMENT, version);
     }
 
     @Test
     void decodeQC3() {
       qctWriter.writeInt(0, 0x20000001);
-      final FileFormatVersion version = FileFormatVersion.Decoder.decode(qctReader, 0);
+      final FileFormatVersion version = FileFormatVersionDecoder.decode(qctReader, 0);
       assertEquals(FileFormatVersion.QC3, version);
     }
 
@@ -84,7 +86,7 @@ class FileFormatVersionTest {
     void decodeUnknownValueThrowsException() {
       qctWriter.writeInt(0, 0xFFFFFFFF); // unknown value
       IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                                                        () -> FileFormatVersion.Decoder.decode(qctReader, 0));
+                                                        () -> FileFormatVersionDecoder.decode(qctReader, 0));
       assertTrue(exception.getMessage().contains("Unknown FileFormatVersion"));
       assertTrue(exception.getMessage().contains("-1"));
     }
@@ -93,7 +95,7 @@ class FileFormatVersionTest {
     void decodeLargeOffset() {
       final int offset = 1024 * 1024; // 1MB offset
       qctWriter.writeInt(offset, 0x20000001);
-      final FileFormatVersion version = FileFormatVersion.Decoder.decode(qctReader, offset);
+      final FileFormatVersion version = FileFormatVersionDecoder.decode(qctReader, offset);
       assertEquals(FileFormatVersion.QC3, version);
     }
   }
@@ -103,8 +105,8 @@ class FileFormatVersionTest {
   class EncoderTests {
     @Test
     void encodeQuickChart() {
-      FileFormatVersion.Encoder.encode(qctWriter, FileFormatVersion.QUICK_CHART, 0);
-      final FileFormatVersion decoded = FileFormatVersion.Decoder.decode(qctReader, 0);
+      FileFormatVersionEncoder.encode(qctWriter, FileFormatVersion.QUICK_CHART, 0);
+      final FileFormatVersion decoded = FileFormatVersionDecoder.decode(qctReader, 0);
       assertEquals(FileFormatVersion.QUICK_CHART, decoded);
     }
 
@@ -112,8 +114,8 @@ class FileFormatVersionTest {
     void encodeAllVariants() {
       for (FileFormatVersion version : FileFormatVersion.values()) {
         final int offset = version.ordinal() * 8;  // spaced out
-        FileFormatVersion.Encoder.encode(qctWriter, version, offset);
-        final FileFormatVersion decoded = FileFormatVersion.Decoder.decode(qctReader, offset);
+        FileFormatVersionEncoder.encode(qctWriter, version, offset);
+        final FileFormatVersion decoded = FileFormatVersionDecoder.decode(qctReader, offset);
         assertEquals(version, decoded);
         assertEquals(version.value(), decoded.value());
       }
@@ -124,8 +126,8 @@ class FileFormatVersionTest {
   void roundTrip() {
     final int byteOffset = 512;
     for (FileFormatVersion original : FileFormatVersion.values()) {
-      FileFormatVersion.Encoder.encode(qctWriter, original, byteOffset);
-      final FileFormatVersion decoded = FileFormatVersion.Decoder.decode(qctReader, byteOffset);
+      FileFormatVersionEncoder.encode(qctWriter, original, byteOffset);
+      final FileFormatVersion decoded = FileFormatVersionDecoder.decode(qctReader, byteOffset);
       assertEquals(original, decoded);
       assertEquals(original.value(), decoded.value());
     }

@@ -5,9 +5,6 @@
 package com.github.aleksikangas.qct.core.meta;
 
 
-import com.github.aleksikangas.qct.core.utils.QctReader;
-import com.github.aleksikangas.qct.core.utils.QctWriter;
-
 import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Objects;
@@ -48,48 +45,5 @@ public record MapOutline(Point[] points) {
 
   public record Point(double latitude,
                       double longitude) {
-  }
-
-  public static final class Decoder {
-    public static MapOutline decode(final QctReader qctReader, final int byteOffset) {
-      final int pointCount = qctReader.readInt(byteOffset);
-      final int arrayByteOffset = qctReader.readPointer(Math.toIntExact(byteOffset + 0x04L));
-      final MapOutline.Point[] points = new MapOutline.Point[pointCount];
-      for (int i = 0; i < pointCount; ++i) {
-        final int pointByteOffset = Math.toIntExact(arrayByteOffset + i * (0x08L + 0x08L));
-        points[i] = new MapOutline.Point(qctReader.readDouble(pointByteOffset),
-                                         qctReader.readDouble(Math.toIntExact(pointByteOffset + 0x08L)));
-      }
-      return new MapOutline(points);
-    }
-
-    private Decoder() {
-    }
-  }
-
-  public static final class Encoder {
-    public static void encode(final QctWriter qctWriter, final MapOutline mapOutline, final int byteOffset) {
-      Objects.requireNonNull(mapOutline);
-      Objects.requireNonNull(mapOutline.points());
-
-      final Point[] points = mapOutline.points();
-      final int pointCount = points.length;
-
-      qctWriter.writeInt(byteOffset, pointCount);
-
-      final int arrayOffset = Math.toIntExact(byteOffset + 0x08L);
-      qctWriter.writePointer(Math.toIntExact(byteOffset + 0x04L), arrayOffset);
-
-      for (int i = 0; i < pointCount; ++i) {
-        final Point point = points[i];
-        final int pointByteOffset = Math.toIntExact(arrayOffset + i * 16L);
-
-        qctWriter.writeDouble(pointByteOffset, point.latitude());
-        qctWriter.writeDouble(Math.toIntExact(pointByteOffset + 0x08L), point.longitude());
-      }
-    }
-
-    private Encoder() {
-    }
   }
 }

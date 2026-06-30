@@ -4,6 +4,8 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
+import com.github.aleksikangas.qct.core.meta.decoder.MagicNumberDecoder;
+import com.github.aleksikangas.qct.core.meta.encoder.MagicNumberEncoder;
 import com.github.aleksikangas.qct.core.utils.DirectQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
@@ -59,14 +61,14 @@ class MagicNumberTest {
     @Test
     void decodeQuickChartInformation() {
       qctWriter.writeInt(0, 0x1423D5FE);
-      final MagicNumber magic = MagicNumber.Decoder.decode(qctReader, 0);
+      final MagicNumber magic = MagicNumberDecoder.decode(qctReader, 0);
       assertEquals(MagicNumber.QUICK_CHART_INFORMATION, magic);
     }
 
     @Test
     void decodeQuickChartMap() {
       qctWriter.writeInt(0, 0x1423D5FF);
-      final MagicNumber magic = MagicNumber.Decoder.decode(qctReader, 0);
+      final MagicNumber magic = MagicNumberDecoder.decode(qctReader, 0);
       assertEquals(MagicNumber.QUICK_CHART_MAP, magic);
     }
 
@@ -74,7 +76,7 @@ class MagicNumberTest {
     void decodeUnknownValueThrowsException() {
       qctWriter.writeInt(0, 0xDEADBEEF); // unknown magic
       IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                                                        () -> MagicNumber.Decoder.decode(qctReader, 0));
+                                                        () -> MagicNumberDecoder.decode(qctReader, 0));
       assertTrue(exception.getMessage().contains("Unknown MagicNumber"));
       assertTrue(exception.getMessage().contains("-559038737"));
     }
@@ -83,7 +85,7 @@ class MagicNumberTest {
     void decodeLargeOffset() {
       final int offset = 1024 * 1024 + 256; // large offset
       qctWriter.writeInt(offset, 0x1423D5FF);
-      final MagicNumber magic = MagicNumber.Decoder.decode(qctReader, offset);
+      final MagicNumber magic = MagicNumberDecoder.decode(qctReader, offset);
       assertEquals(MagicNumber.QUICK_CHART_MAP, magic);
     }
   }
@@ -93,15 +95,15 @@ class MagicNumberTest {
   class EncoderTests {
     @Test
     void encodeQuickChartInformation() {
-      MagicNumber.Encoder.encode(qctWriter, MagicNumber.QUICK_CHART_INFORMATION, 0);
-      final MagicNumber decoded = MagicNumber.Decoder.decode(qctReader, 0);
+      MagicNumberEncoder.encode(qctWriter, MagicNumber.QUICK_CHART_INFORMATION, 0);
+      final MagicNumber decoded = MagicNumberDecoder.decode(qctReader, 0);
       assertEquals(MagicNumber.QUICK_CHART_INFORMATION, decoded);
     }
 
     @Test
     void encodeQuickChartMap() {
-      MagicNumber.Encoder.encode(qctWriter, MagicNumber.QUICK_CHART_MAP, 0);
-      final MagicNumber decoded = MagicNumber.Decoder.decode(qctReader, 0);
+      MagicNumberEncoder.encode(qctWriter, MagicNumber.QUICK_CHART_MAP, 0);
+      final MagicNumber decoded = MagicNumberDecoder.decode(qctReader, 0);
       assertEquals(MagicNumber.QUICK_CHART_MAP, decoded);
     }
 
@@ -109,8 +111,8 @@ class MagicNumberTest {
     void encodeAllVariants() {
       for (MagicNumber magic : MagicNumber.values()) {
         final int offset = magic.ordinal() * 16;
-        MagicNumber.Encoder.encode(qctWriter, magic, offset);
-        final MagicNumber decoded = MagicNumber.Decoder.decode(qctReader, offset);
+        MagicNumberEncoder.encode(qctWriter, magic, offset);
+        final MagicNumber decoded = MagicNumberDecoder.decode(qctReader, offset);
         assertEquals(magic, decoded);
         assertEquals(magic.value(), decoded.value());
       }
@@ -121,8 +123,8 @@ class MagicNumberTest {
   void roundTrip() {
     final int byteOffset = 1024;
     for (MagicNumber original : MagicNumber.values()) {
-      MagicNumber.Encoder.encode(qctWriter, original, byteOffset);
-      final MagicNumber decoded = MagicNumber.Decoder.decode(qctReader, byteOffset);
+      MagicNumberEncoder.encode(qctWriter, original, byteOffset);
+      final MagicNumber decoded = MagicNumberDecoder.decode(qctReader, byteOffset);
       assertEquals(original, decoded);
       assertEquals(original.value(), decoded.value());
     }

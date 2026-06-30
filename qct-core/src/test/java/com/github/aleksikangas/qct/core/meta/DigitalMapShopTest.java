@@ -4,6 +4,8 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
+import com.github.aleksikangas.qct.core.meta.decoder.DigitalMapShopDecoder;
+import com.github.aleksikangas.qct.core.meta.encoder.DigitalMapShopEncoder;
 import com.github.aleksikangas.qct.core.utils.DirectQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
@@ -79,7 +81,7 @@ class DigitalMapShopTest {
       qctWriter.writeInt(0, size);
       qctWriter.allocateWriteString(4, url);
 
-      final DigitalMapShop decoded = DigitalMapShop.Decoder.decode(qctReader, 0);
+      final DigitalMapShop decoded = DigitalMapShopDecoder.decode(qctReader, 0);
 
       assertEquals(size, decoded.size());
       assertEquals(url, decoded.qc3Url());
@@ -94,7 +96,7 @@ class DigitalMapShopTest {
       qctWriter.writeInt(offset, size);
       qctWriter.allocateWriteString(offset + 4, url);
 
-      final DigitalMapShop decoded = DigitalMapShop.Decoder.decode(qctReader, offset);
+      final DigitalMapShop decoded = DigitalMapShopDecoder.decode(qctReader, offset);
 
       assertEquals(size, decoded.size());
       assertEquals(url, decoded.qc3Url());
@@ -108,9 +110,9 @@ class DigitalMapShopTest {
     void encode() {
       final var shop = new DigitalMapShop(8, "encode/test.qc3");
 
-      DigitalMapShop.Encoder.encode(qctWriter, shop, 0);
+      DigitalMapShopEncoder.encode(qctWriter, shop, 0);
 
-      final DigitalMapShop decoded = DigitalMapShop.Decoder.decode(qctReader, 0);
+      final DigitalMapShop decoded = DigitalMapShopDecoder.decode(qctReader, 0);
 
       assertEquals(shop.size(), decoded.size());
       assertEquals(shop.qc3Url(), decoded.qc3Url());
@@ -122,8 +124,8 @@ class DigitalMapShopTest {
     final int offset = 128;
     final var shop = new DigitalMapShop(8, "roundtrip/test.qc3");
 
-    DigitalMapShop.Encoder.encode(qctWriter, shop, offset);
-    final DigitalMapShop decoded = DigitalMapShop.Decoder.decode(qctReader, offset);
+    DigitalMapShopEncoder.encode(qctWriter, shop, offset);
+    final DigitalMapShop decoded = DigitalMapShopDecoder.decode(qctReader, offset);
 
     assertEquals(shop, decoded);
   }

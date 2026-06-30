@@ -4,12 +4,6 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
-import com.github.aleksikangas.qct.core.utils.QctReader;
-import com.github.aleksikangas.qct.core.utils.QctWriter;
-
-import java.util.Arrays;
-import java.util.Objects;
-
 /**
  * <pre>
  * +--------+-----------+--------------------------------------+
@@ -43,28 +37,5 @@ public enum MagicNumber {
       case QUICK_CHART_INFORMATION -> "Quick Chart Information";
       case QUICK_CHART_MAP -> "Quick Chart Map";
     };
-  }
-
-  public static final class Decoder {
-    public static MagicNumber decode(final QctReader qctReader, final int byteOffset) {
-      final int value = qctReader.readInt(byteOffset);
-      return Arrays.stream(MagicNumber.values())
-                   .filter(f -> f.value == value)
-                   .findFirst()
-                   .orElseThrow(() -> new IllegalArgumentException(String.format("Unknown MagicNumber: %d", value)));
-    }
-
-    private Decoder() {
-    }
-  }
-
-  public static final class Encoder {
-    public static void encode(final QctWriter qctWriter, final MagicNumber magicNumber, final int byteOffset) {
-      Objects.requireNonNull(magicNumber);
-      qctWriter.writeInt(byteOffset, magicNumber.value);
-    }
-
-    private Encoder() {
-    }
   }
 }

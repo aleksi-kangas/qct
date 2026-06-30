@@ -4,6 +4,8 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
+import com.github.aleksikangas.qct.core.meta.decoder.SerialNumberDecoder;
+import com.github.aleksikangas.qct.core.meta.encoder.SerialNumberEncoder;
 import com.github.aleksikangas.qct.core.utils.DirectQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
@@ -151,7 +153,7 @@ class SerialNumberTest {
         expectedBytes[i] = (i + 100) % 256; // values 100..131
       }
       qctWriter.writeBytes(0, expectedBytes);
-      final SerialNumber serialNumber = SerialNumber.Decoder.decode(qctReader, 0);
+      final SerialNumber serialNumber = SerialNumberDecoder.decode(qctReader, 0);
       assertArrayEquals(expectedBytes, serialNumber.bytes());
     }
 
@@ -163,7 +165,7 @@ class SerialNumberTest {
       }
       final int offset = 1024 * 1024 + 512; // 1MB + 512 bytes
       qctWriter.writeBytes(offset, expectedBytes);
-      final SerialNumber serialNumber = SerialNumber.Decoder.decode(qctReader, offset);
+      final SerialNumber serialNumber = SerialNumberDecoder.decode(qctReader, offset);
       assertArrayEquals(expectedBytes, serialNumber.bytes());
     }
   }
@@ -178,8 +180,8 @@ class SerialNumberTest {
         originalData[i] = (i * 11) % 251;
       }
       final var serialNumber = new SerialNumber(originalData);
-      SerialNumber.Encoder.encode(qctWriter, serialNumber, 0);
-      final SerialNumber decoded = SerialNumber.Decoder.decode(qctReader, 0);
+      SerialNumberEncoder.encode(qctWriter, serialNumber, 0);
+      final SerialNumber decoded = SerialNumberDecoder.decode(qctReader, 0);
       assertArrayEquals(originalData, decoded.bytes());
     }
   }
@@ -192,8 +194,8 @@ class SerialNumberTest {
       originalData[i] = (i + 50) * 3 % 256;
     }
     final var original = new SerialNumber(originalData);
-    SerialNumber.Encoder.encode(qctWriter, original, byteOffset);
-    final SerialNumber decoded = SerialNumber.Decoder.decode(qctReader, byteOffset);
+    SerialNumberEncoder.encode(qctWriter, original, byteOffset);
+    final SerialNumber decoded = SerialNumberDecoder.decode(qctReader, byteOffset);
     assertEquals(original, decoded);
     assertArrayEquals(originalData, decoded.bytes());
   }

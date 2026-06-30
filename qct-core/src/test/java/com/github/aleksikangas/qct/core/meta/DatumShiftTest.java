@@ -4,6 +4,8 @@
 
 package com.github.aleksikangas.qct.core.meta;
 
+import com.github.aleksikangas.qct.core.meta.decoder.DatumShiftDecoder;
+import com.github.aleksikangas.qct.core.meta.encoder.DatumShiftEncoder;
 import com.github.aleksikangas.qct.core.utils.DirectQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
@@ -76,7 +78,7 @@ class DatumShiftTest {
       qctWriter.writeDouble(0, expectedNorth);
       qctWriter.writeDouble(8, expectedEast);
 
-      final DatumShift datumShift = DatumShift.Decoder.decode(qctReader, 0);
+      final DatumShift datumShift = DatumShiftDecoder.decode(qctReader, 0);
 
       assertEquals(expectedNorth, datumShift.north(), 1e-10);
       assertEquals(expectedEast, datumShift.east(), 1e-10);
@@ -90,7 +92,7 @@ class DatumShiftTest {
       qctWriter.writeDouble(offset, north);
       qctWriter.writeDouble(offset + 8, east);
 
-      final DatumShift datumShift = DatumShift.Decoder.decode(qctReader, offset);
+      final DatumShift datumShift = DatumShiftDecoder.decode(qctReader, offset);
 
       assertEquals(north, datumShift.north());
     }
@@ -102,9 +104,9 @@ class DatumShiftTest {
     @Test
     void encode() {
       final var datumShift = new DatumShift(111.222, -333.444);
-      DatumShift.Encoder.encode(qctWriter, datumShift, 0);
+      DatumShiftEncoder.encode(qctWriter, datumShift, 0);
 
-      final DatumShift decodedDatumShift = DatumShift.Decoder.decode(qctReader, 0);
+      final DatumShift decodedDatumShift = DatumShiftDecoder.decode(qctReader, 0);
 
       assertEquals(datumShift.north(), decodedDatumShift.north(), 1e-10);
       assertEquals(datumShift.east(), decodedDatumShift.east(), 1e-10);
@@ -116,8 +118,8 @@ class DatumShiftTest {
     final int byteOffset = 100;
     final var datumShift = new DatumShift(9876.54321, -1234.56789);
 
-    DatumShift.Encoder.encode(qctWriter, datumShift, byteOffset);
-    final DatumShift decodedDatumShift = DatumShift.Decoder.decode(qctReader, byteOffset);
+    DatumShiftEncoder.encode(qctWriter, datumShift, byteOffset);
+    final DatumShift decodedDatumShift = DatumShiftDecoder.decode(qctReader, byteOffset);
 
     assertEquals(datumShift, decodedDatumShift);
   }
