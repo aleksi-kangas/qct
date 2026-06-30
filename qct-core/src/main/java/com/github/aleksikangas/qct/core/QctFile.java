@@ -7,6 +7,8 @@ package com.github.aleksikangas.qct.core;
 import com.github.aleksikangas.qct.core.color.Palette;
 import com.github.aleksikangas.qct.core.exception.QctRuntimeException;
 import com.github.aleksikangas.qct.core.georef.GeoreferencingCoefficients;
+import com.github.aleksikangas.qct.core.georef.decoder.GeoreferencingCoefficientsDecoder;
+import com.github.aleksikangas.qct.core.georef.encoder.GeoreferencingCoefficientsEncoder;
 import com.github.aleksikangas.qct.core.image.ImageIndex;
 import com.github.aleksikangas.qct.core.interpolation.InterpolationMatrix;
 import com.github.aleksikangas.qct.core.meta.Metadata;
@@ -138,7 +140,7 @@ public record QctFile(Metadata metadata,
       final QctReader qctReader = new MappedQctReader(fileChannel);
       final Metadata metadata = MetadataDecoder.decode(qctReader);
       return new QctFile(metadata,
-                         GeoreferencingCoefficients.Decoder.decode(qctReader),
+                         GeoreferencingCoefficientsDecoder.decode(qctReader),
                          Palette.Decoder.decode(qctReader),
                          InterpolationMatrix.Decoder.decode(qctReader),
                          ImageIndex.Decoder.decode(qctReader, metadata));
@@ -153,7 +155,7 @@ public record QctFile(Metadata metadata,
       Objects.requireNonNull(qctFile);
 
       MetadataEncoder.encode(qctWriter, qctFile.metadata);
-      GeoreferencingCoefficients.Encoder.encode(qctWriter, qctFile.georeferencingCoefficients);
+      GeoreferencingCoefficientsEncoder.encode(qctWriter, qctFile.georeferencingCoefficients);
       Palette.Encoder.encode(qctWriter, qctFile.palette);
       InterpolationMatrix.Encoder.encode(qctWriter, qctFile.interpolationMatrix);
       ImageIndex.Encoder.encode(qctWriter, qctFile.imageIndex, qctFile.metadata);

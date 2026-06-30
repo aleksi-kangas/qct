@@ -6,15 +6,12 @@ package com.github.aleksikangas.qct.core.georef;
 
 import com.github.aleksikangas.qct.core.QctFile;
 import com.github.aleksikangas.qct.core.meta.DatumShift;
-import com.github.aleksikangas.qct.core.utils.QctReader;
-import com.github.aleksikangas.qct.core.utils.QctWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
-import java.util.Objects;
 
 /**
  * <pre>
@@ -343,83 +340,5 @@ public record GeoreferencingCoefficients(double eas,
   private static boolean isDistorted(final Wgs84Coordinates expectedWgs84Coordinates, final Point2D transformed) {
     return (Math.abs(expectedWgs84Coordinates.latitude() - transformed.getY()) > 0.001) ||
            (Math.abs(expectedWgs84Coordinates.longitude() - transformed.getX()) > 0.001);
-  }
-
-  public static final class Decoder {
-    public static GeoreferencingCoefficients decode(final QctReader qctReader) {
-      final double[] easDoubles = qctReader.readDoubles(GeoreferencingCoefficients.BYTE_OFFSET, 10);
-      final double[] norDoubles = qctReader.readDoubles(Math.toIntExact(GeoreferencingCoefficients.BYTE_OFFSET + 0x50L),
-                                                        10);
-      final double[] latDoubles = qctReader.readDoubles(Math.toIntExact(GeoreferencingCoefficients.BYTE_OFFSET + 0xA0L),
-                                                        10);
-      final double[] lonDoubles = qctReader.readDoubles(Math.toIntExact(GeoreferencingCoefficients.BYTE_OFFSET + 0xF0L),
-                                                        10);
-
-      return new GeoreferencingCoefficients(
-              // eas
-              easDoubles[0],
-              easDoubles[1],
-              easDoubles[2],
-              easDoubles[3],
-              easDoubles[4],
-              easDoubles[5],
-              easDoubles[6],
-              easDoubles[7],
-              easDoubles[8],
-              easDoubles[9],
-              // nor
-              norDoubles[0],
-              norDoubles[1],
-              norDoubles[2],
-              norDoubles[3],
-              norDoubles[4],
-              norDoubles[5],
-              norDoubles[6],
-              norDoubles[7],
-              norDoubles[8],
-              norDoubles[9],
-              // lat
-              latDoubles[0],
-              latDoubles[1],
-              latDoubles[2],
-              latDoubles[3],
-              latDoubles[4],
-              latDoubles[5],
-              latDoubles[6],
-              latDoubles[7],
-              latDoubles[8],
-              latDoubles[9],
-              // lon
-              lonDoubles[0],
-              lonDoubles[1],
-              lonDoubles[2],
-              lonDoubles[3],
-              lonDoubles[4],
-              lonDoubles[5],
-              lonDoubles[6],
-              lonDoubles[7],
-              lonDoubles[8],
-              lonDoubles[9]);
-    }
-
-    private Decoder() {
-    }
-  }
-
-  public static final class Encoder {
-    public static void encode(final QctWriter qctWriter, final GeoreferencingCoefficients georeferencingCoefficients) {
-      Objects.requireNonNull(georeferencingCoefficients);
-
-      qctWriter.writeDoubles(GeoreferencingCoefficients.BYTE_OFFSET, georeferencingCoefficients.easValues());
-      qctWriter.writeDoubles(Math.toIntExact(GeoreferencingCoefficients.BYTE_OFFSET + 0x50L),
-                             georeferencingCoefficients.norValues());
-      qctWriter.writeDoubles(Math.toIntExact(GeoreferencingCoefficients.BYTE_OFFSET + 0xA0L),
-                             georeferencingCoefficients.latValues());
-      qctWriter.writeDoubles(Math.toIntExact(GeoreferencingCoefficients.BYTE_OFFSET + 0xF0L),
-                             georeferencingCoefficients.lonValues());
-    }
-
-    private Encoder() {
-    }
   }
 }

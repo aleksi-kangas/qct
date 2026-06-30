@@ -5,6 +5,8 @@
 package com.github.aleksikangas.qct.core.georef;
 
 
+import com.github.aleksikangas.qct.core.georef.decoder.GeoreferencingCoefficientsDecoder;
+import com.github.aleksikangas.qct.core.georef.encoder.GeoreferencingCoefficientsEncoder;
 import com.github.aleksikangas.qct.core.meta.DatumShift;
 import com.github.aleksikangas.qct.core.utils.DirectQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
@@ -145,8 +147,8 @@ class GeoreferencingCoefficientsTest {
     void encodeAndDecode() {
       final GeoreferencingCoefficients coefficients = createSimpleCoefficients();
 
-      GeoreferencingCoefficients.Encoder.encode(qctWriter, coefficients);
-      final GeoreferencingCoefficients decodedCoefficients = GeoreferencingCoefficients.Decoder.decode(qctReader);
+      GeoreferencingCoefficientsEncoder.encode(qctWriter, coefficients);
+      final GeoreferencingCoefficients decodedCoefficients = GeoreferencingCoefficientsDecoder.decode(qctReader);
 
       assertEquals(coefficients, decodedCoefficients);
     }
@@ -155,7 +157,7 @@ class GeoreferencingCoefficientsTest {
     void encodeWritesCorrectOffsets() {
       final GeoreferencingCoefficients coefficients = createSimpleCoefficients();
 
-      GeoreferencingCoefficients.Encoder.encode(qctWriter, coefficients);
+      GeoreferencingCoefficientsEncoder.encode(qctWriter, coefficients);
 
       final QctReader qctReader = new DirectQctReader(fileChannel);
       final double[] eas = qctReader.readDoubles(GeoreferencingCoefficients.BYTE_OFFSET, 10);
@@ -180,7 +182,7 @@ class GeoreferencingCoefficientsTest {
         qctWriter.writeDouble(byteOffset + 0xF0 + i * 8, i + 30);
       }
 
-      final GeoreferencingCoefficients coefficients = GeoreferencingCoefficients.Decoder.decode(qctReader);
+      final GeoreferencingCoefficients coefficients = GeoreferencingCoefficientsDecoder.decode(qctReader);
 
       assertEquals(0.0, coefficients.eas());
       assertEquals(10.0, coefficients.nor());
