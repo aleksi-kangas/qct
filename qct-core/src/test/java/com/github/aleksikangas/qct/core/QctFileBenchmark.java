@@ -4,6 +4,7 @@
 
 package com.github.aleksikangas.qct.core;
 
+import com.github.aleksikangas.qct.core.decoder.QctFileDecoder;
 import org.openjdk.jmh.Main;
 import org.openjdk.jmh.annotations.*;
 
@@ -34,7 +35,7 @@ public class QctFileBenchmark {
   @Fork(value = 10, warmups = 3)
   public void decode() throws IOException {
     try (final FileChannel fileChannel = FileChannel.open(qctFilePath, StandardOpenOption.READ)) {
-      QctFile.Decoder.decode(fileChannel);
+      QctFileDecoder.decode(fileChannel);
     }
   }
 

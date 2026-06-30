@@ -4,6 +4,8 @@
 
 package com.github.aleksikangas.qct.core;
 
+import com.github.aleksikangas.qct.core.decoder.QctFileDecoder;
+import com.github.aleksikangas.qct.core.encoder.QctFileEncoder;
 import com.github.aleksikangas.qct.core.image.ImageIndex;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -27,14 +29,14 @@ class QctFileTest {
   @MethodSource("qctFilesProvider")
   void roundTripTest(final Path path) throws Exception {
     try (FileChannel originalReadFileChannel = FileChannel.open(path, StandardOpenOption.READ)) {
-      final QctFile originalQctFile = QctFile.Decoder.decode(originalReadFileChannel);
+      final QctFile originalQctFile = QctFileDecoder.decode(originalReadFileChannel);
       final Path tempFile = Files.createTempFile("qct", ".bin");
       try (final var tempWriteFileChannel = FileChannel.open(tempFile, StandardOpenOption.WRITE)) {
         final var tempQctWriter = new QctWriter(tempWriteFileChannel, originalQctFile.headerSizeBytes());
-        QctFile.Encoder.encode(tempQctWriter, originalQctFile);
+        QctFileEncoder.encode(tempQctWriter, originalQctFile);
       }
       try (final var tempReadFileChannel = FileChannel.open(tempFile, StandardOpenOption.READ)) {
-        final QctFile decodedQctFile = QctFile.Decoder.decode(tempReadFileChannel);
+        final QctFile decodedQctFile = QctFileDecoder.decode(tempReadFileChannel);
         assertEquals(originalQctFile.metadata(), decodedQctFile.metadata());
         assertEquals(originalQctFile.georeferencingCoefficients(), decodedQctFile.georeferencingCoefficients());
         assertEquals(originalQctFile.palette(), decodedQctFile.palette());
