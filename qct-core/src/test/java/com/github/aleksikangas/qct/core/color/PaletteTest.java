@@ -4,6 +4,8 @@
 
 package com.github.aleksikangas.qct.core.color;
 
+import com.github.aleksikangas.qct.core.color.decoder.PaletteDecoder;
+import com.github.aleksikangas.qct.core.color.encoder.PaletteEncoder;
 import com.github.aleksikangas.qct.core.utils.DirectQctReader;
 import com.github.aleksikangas.qct.core.utils.QctReader;
 import com.github.aleksikangas.qct.core.utils.QctWriter;
@@ -127,7 +129,7 @@ class PaletteTest {
       final Palette expectedPalette = new Palette(expectedColors);
       qctWriter.writeBytes(Palette.BYTE_OFFSET, expectedPalette.byteValues());
 
-      final Palette decodedPalette = Palette.Decoder.decode(qctReader);
+      final Palette decodedPalette = PaletteDecoder.decode(qctReader);
 
       assertEquals(expectedPalette, decodedPalette);
     }
@@ -143,7 +145,7 @@ class PaletteTest {
       qctWriter.writeBytes(Palette.BYTE_OFFSET, singleColorBytes);
       qctWriter.writeBytes(Palette.BYTE_OFFSET + 4, new int[(Palette.SIZE - 1) * 4]);
 
-      final Palette palette = Palette.Decoder.decode(qctReader);
+      final Palette palette = PaletteDecoder.decode(qctReader);
 
       assertEquals(testColor, palette.color(0));
     }
@@ -157,8 +159,8 @@ class PaletteTest {
       final Color[] colors = createTestColors();
       final var palette = new Palette(colors);
 
-      Palette.Encoder.encode(qctWriter, palette);
-      final Palette decodedPalette = Palette.Decoder.decode(qctReader);
+      PaletteEncoder.encode(qctWriter, palette);
+      final Palette decodedPalette = PaletteDecoder.decode(qctReader);
 
       assertEquals(palette, decodedPalette);
     }
@@ -169,8 +171,8 @@ class PaletteTest {
     final Color[] originalColors = createTestColors();
     final var originalPalette = new Palette(originalColors);
 
-    Palette.Encoder.encode(qctWriter, originalPalette);
-    final Palette decodedPalette = Palette.Decoder.decode(qctReader);
+    PaletteEncoder.encode(qctWriter, originalPalette);
+    final Palette decodedPalette = PaletteDecoder.decode(qctReader);
 
     assertEquals(originalPalette, decodedPalette);
   }

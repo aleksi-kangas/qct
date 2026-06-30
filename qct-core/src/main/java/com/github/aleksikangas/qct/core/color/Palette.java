@@ -4,8 +4,6 @@
 
 package com.github.aleksikangas.qct.core.color;
 
-import com.github.aleksikangas.qct.core.utils.QctReader;
-import com.github.aleksikangas.qct.core.utils.QctWriter;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
@@ -111,31 +109,5 @@ public record Palette(Color[] colors) {
       }
     });
     return rgbPixels;
-  }
-
-  public static final class Decoder {
-    public static Palette decode(final QctReader qctReader) {
-      final int[] bytes = qctReader.readBytes(Palette.BYTE_OFFSET, Palette.SIZE * 4);
-      final Color[] colors = new Color[Palette.SIZE];
-      for (int i = 0; i < Palette.SIZE; ++i) {
-        final int blue = bytes[i * 4];
-        final int green = bytes[i * 4 + 1];
-        final int red = bytes[i * 4 + 2];
-        colors[i] = new Color(red, green, blue);
-      }
-      return new Palette(colors);
-    }
-
-    private Decoder() {
-    }
-  }
-
-  public static final class Encoder {
-    public static void encode(final QctWriter qctWriter, final Palette palette) {
-      qctWriter.writeBytes(Palette.BYTE_OFFSET, palette.byteValues());
-    }
-
-    private Encoder() {
-    }
   }
 }
